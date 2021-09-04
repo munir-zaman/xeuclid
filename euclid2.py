@@ -1,5 +1,9 @@
 from euclid_math import *
 
+class GObject(object):
+    """ base class for geometric objects """
+    def __init__(self):
+        pass
 
 class Point(Array):
     def __init__(self,coordinates,polar=False):
@@ -86,7 +90,7 @@ def p2l(P1,P2):
     return Line(A, B, C)
 
 
-class Line():
+class Line(GObject):
 
     def __init__(self,a,b,c):
         """ Line ax+by+c=0
@@ -120,6 +124,8 @@ class Line():
             self.ytheta=0
         elif self.slope==0:
             self.ytheta=90
+
+        self.obj_type="Line"
 
     def __repr__(self):
         return f"{self.a}*x+{self.b}*y+{self.c}=0"
@@ -307,7 +313,7 @@ yaxis=Line(1,0,0)
 xaxis=Line(0,1,0)
 
 
-class Segment():
+class Segment(GObject):
     """docstring for Segment"""
     def __init__(self, A, B):
 
@@ -320,6 +326,7 @@ class Segment():
         self.B=B
         self.D=self.B-self.A
         self.line=p2l(self.A, self.B)
+        self.obj_type="Segment"
 
     def __call__(self,t):
         return self.A+self.D*t
@@ -442,12 +449,13 @@ def concurrent(*lines):
 
 
 
-class Polygon():
+class Polygon(GObject):
 
     def __init__(self,*vertices):
 
         self.vertices=list(vertices)
         self.area=self.area()
+        self.obj_type="Polygon"
 
     def area(self):
 
@@ -480,3 +488,30 @@ class Polygon():
 
     def get_unique_points(self):
         return self.vertices
+
+
+def points_to_line(p1,p2):
+    return p2l(p1, p2)
+
+def points_to_segment(p1,p2):
+    return Segment(p1, p2)
+
+def points_to_polygon(*p):
+    return Polygon(*p)
+
+def points_to_gobject(points,obj_type):
+    return eval(f"points_to_{obj_type.lower()}(*{points})")
+
+def apply_transformation(obj,func):
+
+    Func=lambda L: [func(*l) for l in L]
+    out=[]
+
+    if not isinstance(obj, list):
+        out=points_to_gobject(Func(obj.get_unique_points()),obj.obj_type)
+    else:
+        out=[points_to_gobject(Func(gobj.get_unique_points()),gobj.obj_type) for gobj in obj]
+
+    return out
+
+
