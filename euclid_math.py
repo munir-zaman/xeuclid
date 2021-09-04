@@ -1,6 +1,10 @@
 import math as mth
 import numpy as np
 
+abs_tol=10**-5
+def eq(a,b):
+    return mth.isclose(a,b,abs_tol=abs_tol)
+
 def array(*n):
     return np.array(n)
 
