@@ -1,44 +1,33 @@
-import math as mth
-import numpy as np
-
-def array(*n):
-    return np.array(n)
-
-def sin(a):
-    return mth.sin(mth.radians(a))
-
-def asin(a):
-    return mth.degrees(mth.asin(a))%180
-
-def cos(a):
-    return mth.cos(mth.radians(a))
-
-def acos(a):
-    return mth.degrees(mth.acos(a))%180
-
-def tan(a):
-    return mth.tan(mth.radians(a))
-
-def atan(a):
-    return mth.degrees(mth.atan(a))%180
-
-def atan2(x,y):
-    return mth.degrees(mth.atan2(y,x))
+from euclid_math import *
 
 
-def system2(A1,A2):
-    """ returns the solution to the following system of linear equations, 
-        A1[0]x+A1[1]y+A1[2]=0
-        A2[0]x+A2[1]y+A2[2]=0
+class Point(Array):
+    def __init__(self,coordinates,polar=False):
 
-        A1,A2: list of length 3
+        if polar:
+            r,t=coordinates
+            coordinates=[r*cos(t),r*sin(t)]
+        super().__init__(coordinates)
 
-    """
-    a1,b1,c1=A1
-    a2,b2,c2=A2
-    x=(b1*c2-c1*b2)/(a1*b2-b1*a2)
-    y=(c1*a2-a1*c2)/(a1*b2-b1*a2)
-    return [x,y]
+        self.x,self.y=self
+        self.polar=Array([sqrt(self.x**2+self.y**2),atan2(self.x, self.y)])
+        self.r,self.t=self.polar
+
+    def rotate(self,point,angle):
+        p1,p2=self
+        q1,q2=point
+
+        P1,P2=p1-q1,p2-q2
+        line=p2l([P1,P2],[0,0])
+        xtheta=line.xtheta
+
+        R=dist([P1,P2],[0,0])
+        Rx=R*cos(angle+xtheta)
+        Ry=R*sin(angle+xtheta)
+
+        p1_,p2_=Rx+q1,Ry+q2
+        return Point([p1_,p2_])
+
 
 def angle(A,B,C):
     """ returns the angle <ABC 
@@ -317,7 +306,6 @@ def collinear(*points):
 
 def concurrent(*lines):
     """ checks if the given set of lines are concurrent """
-    
     ints=[]
     out=True
 
@@ -343,20 +331,7 @@ def concurrent(*lines):
     print(out)
     return ints[-1]
 
-def rotate(point1,point2,angle):
-    p1,p2=point1
-    q1,q2=point2
 
-    P1,P2=p1-q1,p2-q2
-    line=p2l([P1,P2],[0,0])
-    xtheta=line.xtheta
-
-    R=dist([P1,P2],[0,0])
-    Rx=R*cos(angle+xtheta)
-    Ry=R*sin(angle+xtheta)
-
-    p1_,p2_=Rx+q1,Ry+q2
-    return [p1_,p2_]
 
 class Polygon():
 
@@ -393,3 +368,4 @@ class Polygon():
         for p in self.vertices:
             vertices_.append(rotate(p, point, angle))
         return Polygon(*vertices_)
+
