@@ -123,10 +123,28 @@ def system2(A1,A2):
         A1,A2: list of length 3
 
     """
+
     a1,b1,c1=A1
     a2,b2,c2=A2
-    x=(b1*c2-c1*b2)/(a1*b2-b1*a2)
-    y=(c1*a2-a1*c2)/(a1*b2-b1*a2)
-    return [x,y]
+    if (a1*b2-b1*a2)!=0:
+        x=(b1*c2-c1*b2)/(a1*b2-b1*a2)
+        y=(c1*a2-a1*c2)/(a1*b2-b1*a2)
+        out=[x,y]
+    else:
+        print("solution does not exist")
+        out=None
+    return out
 
+def in_interval(x,a,b):
+    return (a <= x) and (x <= b)
 
+def quad(a,b,c):
+    d=b**2-4*a*c
+    if b >= 0:
+        out=[(-b+d)/2*a,(-b-d)/2*a]
+    else:
+        print("solution does not exist in R")
+        out=None 
+    return out
+
+    

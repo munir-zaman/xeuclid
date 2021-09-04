@@ -76,7 +76,7 @@ def dist(p1,p2):
 
 def mid(p1,p2):
     """ Return midpoint of p1 and p2 """
-    return [(p1[0]+p2[0])/2,(p1[1]+p2[1])/2]
+    return Point([(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
 
 def p2l(P1,P2):
     """ Returns the line through P1 and P2 """
@@ -127,8 +127,9 @@ class Line():
     def __str__(self):
         return str(f"{self.a}*x+{self.b}*y+{self.c}=0") 
     
-    def slope_int(self):
-        return f"{self.slope}*x+{self.yint}"
+    def explicit(self):
+        print(f"{self.slope}*x+{self.yint}")
+        return [self.slope,self.yint]
 
     def __call__(self,x):
         if self.slope!="inf":
@@ -237,7 +238,7 @@ class Line():
     def intersection(self,line):
         """ returns the intersection point of "self" and line "line" """
         l1,l2=self,line
-        return system2([l1.a,l1.b,l1.c],[l2.a,l2.b,l2.c])
+        return Point(system2([l1.a,l1.b,l1.c],[l2.a,l2.b,l2.c]))
 
     def rotate(self,point,angle):
         """ rotates the line "self" around point "pont" by an angle "angle" """
@@ -431,6 +432,6 @@ class Polygon():
     def rotate(self,point,angle):
         vertices_=[]
         for p in self.vertices:
-            vertices_.append(rotate(p, point, angle))
+            vertices_.append(p.rotate(point, angle))
         return Polygon(*vertices_)
 
