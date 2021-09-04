@@ -308,11 +308,13 @@ class Segment():
             Bx,By=B
             Cx,Cy=C
             Dx,Dy=D
-            t=(Cx-Ax)/(Bx-Dx)
-            exists=((0 <= t) and (t <= 1)) and eq(t,(Cy-Ay)/(By-Dy))
+            A1=[Bx,-Dx,Ax-Cx]
+            A2=[By,-Dy,Ay-Cy]
+            u,v=system2(A1, A2)
+            exists=((0 <= u) and (u <= 1)) and ((0 <= v) and (v <= 1))
             if exists:
-                print(f"t value: {t}, intersection point: {A+B*t}")
-                out=Point(A+B*t)
+                print(f"t value: {u}, intersection point: {A+B*u}")
+                out=Point(A+B*u)
                 
         elif isinstance(other, Line):
             x,y=other.intersection(self.line)
@@ -326,6 +328,7 @@ class Segment():
                 out=Point(A+B*t)
         
         return out
+
 
 def collinear(*points):
     """ collinear(*points)
