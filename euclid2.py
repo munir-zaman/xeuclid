@@ -291,7 +291,7 @@ class Segment():
         dx,dy=self.D
         x,y=point
         t=(x-Ax)/dx
-        out=(Ay+dy*t==y) and ((0 <= t) and (t <= 1))  
+        out=eq(Ay+dy*t,y) and ((0 <= t) and (t <= 1))  
         return out
 
     def rotate(self,point,angle):
@@ -309,7 +309,7 @@ class Segment():
             Cx,Cy=C
             Dx,Dy=D
             t=(Cx-Ax)/(Bx-Dx)
-            exists=((0 <= t) and (t <= 1)) and t==(Cy-Ay)/(By-Dy)
+            exists=((0 <= t) and (t <= 1)) and eq(t,(Cy-Ay)/(By-Dy))
             if exists:
                 print(f"t value: {t}, intersection point: {A+B*t}")
                 out=Point(A+B*t)
@@ -320,7 +320,7 @@ class Segment():
             Ax,Ay=A
             Bx,By=B
             t=(x-Ax)/Bx
-            exists=((0 <= t) and (t <= 1)) and t==(y-Ay)/By
+            exists=((0 <= t) and (t <= 1)) and eq(t,(y-Ay)/By)
             if exists:
                 print(f"t value: {t}, intersection point: {A+B*t}")
                 out=Point(A+B*t)
