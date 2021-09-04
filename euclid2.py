@@ -11,7 +11,7 @@ class Point(Array):
 
         self.x,self.y=self
         self.polar=Array([sqrt(self.x**2+self.y**2),atan2(self.x, self.y)])
-        self.r,self.t=self.polar
+        self.r,self.theta=self.polar
 
     def rotate(self,point,angle):
         p1,p2=self
@@ -145,7 +145,7 @@ class Line():
 
     def __eq__(self,line):
 
-        if intersection(line,list) and len(line)==3:
+        if self.intersection(line,list) and len(line)==3:
             line=Line(*line)
 
         try:
@@ -162,6 +162,35 @@ class Line():
     def __xor__(self,line):
         """ returns the angle between self and line """
         return self.angle(line)
+
+    def __add__(self,other):
+        out=None
+        if isinstance(other, list):
+            other=Array(other)
+        p1,p2=self.get_unique_points()
+        out=p2l(p1+other,p2+other)
+
+        return out
+
+    def __radd__(self,other):
+        return self+other
+
+    def __sub__(self,other):
+        if isinstance(other, list):
+            other=-Array(other)
+        else:
+            other=-other
+
+        return self+other
+
+    def __rsub__(self,other):
+        out=None
+        if isinstance(other, list):
+            other=Array(other)
+        p1,p2=self.get_unique_points()
+        out=p2l(other-p1,other-p2)
+
+        return out
 
     def contains(self,p):
         """ checks if the point "p" is on the line "self" """
@@ -263,6 +292,17 @@ class Line():
 
         return line
 
+    def get_unique_points(self):
+        p1,p2=None,None
+        if self.b==0:
+            p1=Point([-self.c/self.a,1])
+            p2=Point([-self.c/self.a,2])
+        else:
+            p1=Point([1,-(self.a/self.b)*1-(self.c/self.b)])
+            p2=Point([2,-(self.a/self.b)*2-(self.c/self.b)])
+
+        return p1,p2 
+
 yaxis=Line(1,0,0)
 xaxis=Line(0,1,0)
 
@@ -329,6 +369,9 @@ class Segment():
                 out=Point(A+B*t)
         
         return out
+
+    def get_unique_points(self):
+        return self.A,self.B
 
 
 def collinear(*points):
@@ -435,3 +478,5 @@ class Polygon():
             vertices_.append(p.rotate(point, angle))
         return Polygon(*vertices_)
 
+    def get_unique_points(self):
+        return self.vertices
