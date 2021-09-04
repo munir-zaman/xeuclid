@@ -110,6 +110,10 @@ class Array(list):
     def apply_func(self,func):
         return Array(Vectorize(func)(self))
 
+    def __eq__(self,other):
+        out=all([eq(x,y) for x,y in zip(self,other)])
+        return out
+
 
 def system2(A1,A2):
     """ returns the solution to the following system of linear equations, 
