@@ -265,6 +265,68 @@ class Line():
 yaxis=Line(1,0,0)
 xaxis=Line(0,1,0)
 
+
+class Segment():
+    """docstring for Segment"""
+    def __init__(self, A, B):
+
+        if not isinstance(A, Point):
+            A=Point(A)
+        if not isinstance(B, Point):
+            B=Point(B)
+
+        self.A=A
+        self.B=B
+        self.D=self.B-self.A
+        self.line=p2l(self.A, self.B)
+
+    def __call__(self,t):
+        return self.A+self.D*t
+
+    def __repr__(self):
+        return f"{self.A}+{self.D}*t"
+
+    def contains(self,point):
+        Ax,Ay=self.A
+        dx,dy=self.D
+        x,y=point
+        t=(x-Ax)/dx
+        out=(Ay+dy*t==y) and ((0 <= t) and (t <= 1))  
+        return out
+
+    def rotate(self,point,angle):
+        A_=self.A.rotate(point, angle)
+        B_=self.B.rotate(point, angle)
+        return Segment(A_, B_)
+
+    def intersection(self,other):
+        out=None
+        if isinstance(other, Segment):
+            A,B=self.A,self.D
+            C,D=other.A,other.D
+            Ax,Ay=A
+            Bx,By=B
+            Cx,Cy=C
+            Dx,Dy=D
+            t=(Cx-Ax)/(Bx-Dx)
+            exists=((0 <= t) and (t <= 1)) and t==(Cy-Ay)/(By-Dy)
+            if exists:
+                print(f"t value: {t}, intersection point: {A+B*t}")
+                out=Point(A+B*t)
+                
+        elif isinstance(other, Line):
+            x,y=other.intersection(self.line)
+            A,B=self.A,self.D
+            Ax,Ay=A
+            Bx,By=B
+            t=(x-Ax)/Bx
+            exists=((0 <= t) and (t <= 1)) and t==(y-Ay)/By
+            if exists:
+                print(f"t value: {t}, intersection point: {A+B*t}")
+                out=Point(A+B*t)
+        
+        return out
+
 def collinear(*points):
     """ collinear(*points)
 
