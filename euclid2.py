@@ -33,6 +33,37 @@ class Point(Array):
         return Point([p1_,p2_])
 
 
+def p2l(P1,P2):
+    """ Returns the line through P1 and P2 """
+    x1,y1=P1
+    x2,y2=P2
+    A,B,C=(y1-y2),(x2-x1),(y2-y1)*x1-(x2-x1)*y1 
+    return Line(A, B, C)
+
+def points_to_line(p1,p2):
+    return p2l(p1, p2)
+
+def points_to_segment(p1,p2):
+    return Segment(p1, p2)
+
+def points_to_polygon(*p):
+    return Polygon(*p)
+
+def points_to_gobject(points,obj_type):
+    return eval(f"points_to_{obj_type.lower()}(*{points})")
+
+def apply_transformation(obj,func):
+
+    Func=lambda L: [func(*l) for l in L]
+    out=[]
+
+    if not isinstance(obj, list):
+        out=points_to_gobject(Func(obj.get_unique_points()),obj.obj_type)
+    else:
+        out=[points_to_gobject(Func(gobj.get_unique_points()),gobj.obj_type) for gobj in obj]
+
+    return out
+
 def angle(A,B,C):
     """ returns the angle <ABC 
         A,B,C : List of length 2 [x,y]
@@ -81,13 +112,6 @@ def dist(p1,p2):
 def mid(p1,p2):
     """ Return midpoint of p1 and p2 """
     return Point([(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
-
-def p2l(P1,P2):
-    """ Returns the line through P1 and P2 """
-    x1,y1=P1
-    x2,y2=P2
-    A,B,C=(y1-y2),(x2-x1),(y2-y1)*x1-(x2-x1)*y1 
-    return Line(A, B, C)
 
 
 class Line(GObject):
@@ -277,25 +301,8 @@ class Line(GObject):
 
     def rotate(self,point,angle):
         """ rotates the line "self" around point "pont" by an angle "angle" """
-        px,py=point
-        xtheta=self.xtheta
-        xtheta_= xtheta + angle
-        m_=tan(xtheta_)
-
-        B_,A_=1,-m_
-        C_=-(A_*px+B_*py)
-
-        line=Line(A_,B_,C_)
-
-        if not self.contains(point):
-            #px,py=[]
-            R=self.distance(point)
-            Rx=R*cos(90+xtheta_)
-            Ry=R*sin(90+xtheta_)
-            line=line.shift([Rx,Ry])
-        else:
-            line=line
-
+        func=lambda x,y: Point([x,y]).rotate(point,angle)
+        line=apply_transformation(self, func)
         return line
 
     def get_unique_points(self):
@@ -459,7 +466,7 @@ class Polygon(GObject):
 
     def area(self):
 
-        vertices=self.vertices
+        vertices=self.vertices[::]
         vertices.append(self.vertices[0])
 
         V=[[vertices[p],vertices[p+1]] for p in range(0,len(vertices)-1)]
@@ -481,37 +488,10 @@ class Polygon(GObject):
         return Polygon(*vertices_)
 
     def rotate(self,point,angle):
-        vertices_=[]
-        for p in self.vertices:
-            vertices_.append(p.rotate(point, angle))
-        return Polygon(*vertices_)
+        func=lambda x,y: Point([x,y]).rotate(point,angle)
+        poly=apply_transformation(self, func)
+        return poly
 
     def get_unique_points(self):
-        return self.vertices
-
-
-def points_to_line(p1,p2):
-    return p2l(p1, p2)
-
-def points_to_segment(p1,p2):
-    return Segment(p1, p2)
-
-def points_to_polygon(*p):
-    return Polygon(*p)
-
-def points_to_gobject(points,obj_type):
-    return eval(f"points_to_{obj_type.lower()}(*{points})")
-
-def apply_transformation(obj,func):
-
-    Func=lambda L: [func(*l) for l in L]
-    out=[]
-
-    if not isinstance(obj, list):
-        out=points_to_gobject(Func(obj.get_unique_points()),obj.obj_type)
-    else:
-        out=[points_to_gobject(Func(gobj.get_unique_points()),gobj.obj_type) for gobj in obj]
-
-    return out
-
+        return self.vertices[::]
 
