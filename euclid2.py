@@ -1,36 +1,19 @@
 from euclid_math import *
 
+
 class GObject(object):
     """ base class for geometric objects """
     def __init__(self):
         pass
 
-class Point(Array):
-    def __init__(self,coordinates,polar=False):
 
-        if polar:
-            r,t=coordinates
-            coordinates=[r*cos(t),r*sin(t)]
-        super().__init__(coordinates)
+origin=col_vector(np.array([0,0]))
 
-        self.x,self.y=self
-        self.polar=Array([sqrt(self.x**2+self.y**2),atan2(self.x, self.y)])
-        self.r,self.theta=self.polar
+rotation_matrix=lambda theta: np.array([[cos(theta),-1*sin(theta)],
+                                        [sin(theta),   cos(theta)]])
 
-    def rotate(self,point,angle):
-        p1,p2=self
-        q1,q2=point
+rotate=lambda A,B,theta: np.matmul(rotation_matrix(theta),A-B)+B
 
-        P1,P2=p1-q1,p2-q2
-        line=p2l([P1,P2],[0,0])
-        xtheta=line.xtheta
-
-        R=dist([P1,P2],[0,0])
-        Rx=R*cos(angle+xtheta)
-        Ry=R*sin(angle+xtheta)
-
-        p1_,p2_=Rx+q1,Ry+q2
-        return Point([p1_,p2_])
 
 
 def p2l(P1,P2):
