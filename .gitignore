@@ -2,3 +2,4 @@
 *.swp
 __pycahce__/
 old/
+doc/.ipynb_checkpoints/
