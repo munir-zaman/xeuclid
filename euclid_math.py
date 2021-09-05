@@ -63,7 +63,7 @@ def system(A,B):
     return np.linalg.solve(A, B)
 
 def matmul(A,B):
-    return np.linalg.matmul(A,B)
+    return np.matmul(A,B)
 
 def det(A):
     """ returns the determinant,`np.linalg.det(A)`, of the matrix A """
