@@ -1,118 +1,26 @@
 import math as mth
 import numpy as np
 
+
 abs_tol=10**-5
-def eq(a,b):
-    return mth.isclose(a,b,abs_tol=abs_tol)
 
-def array(*n):
-    return np.array(n)
+eq=lambda a,b: mth.isclose(a,b,abs_tol=abs_tol)
 
-def sqrt(n):
-    if isinstance(n, Array):
-        out=[mth.sqrt(x) for x in n]
-    else:
-        out=mth.sqrt(n)
+sqrt=lambda n: mth.sqrt(n) 
 
-    return out
+sin=lambda a: mth.sin(mth.radians(a))
 
-def sin(a):
-    return mth.sin(mth.radians(a))
+asin=lambda a: mth.degrees(mth.asin(a))%180
 
-def asin(a):
-    return mth.degrees(mth.asin(a))%180
+cos=lambda a: mth.cos(mth.radians(a))
 
-def cos(a):
-    return mth.cos(mth.radians(a))
+acos=lambda a: mth.degrees(mth.acos(a))%180
 
-def acos(a):
-    return mth.degrees(mth.acos(a))%180
+tan=lambda a: mth.tan(mth.radians(a))
 
-def tan(a):
-    return mth.tan(mth.radians(a))
+atan=lambda a: mth.degrees(mth.atan(a))%180
 
-def atan(a):
-    return mth.degrees(mth.atan(a))%180
-
-def atan2(x,y):
-    return mth.degrees(mth.atan2(y,x))
-
-def Vectorize(func):
-    return lambda A: [func(x) for x in A]
-
-
-class Array(list):
-    def __init__(self,values):
-        super().__init__(values)
-        self.as_list=list(values)
-        self.as_tuple=tuple(values)
-
-    def __add__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[x+y for x,y in zip(self,n)]
-        return Array(A)
-
-    def __radd__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[x+y for x,y in zip(self,n)]
-        return Array(A)
-
-    def __sub__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[x-y for x,y in zip(self,n)]
-        return Array(A)
-
-    def __rsub__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[y-x for x,y in zip(self,n)]
-        return Array(A)
-
-    def __mul__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[x*y for x,y in zip(self,n)]
-        return Array(A)
-
-    def __rmul__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[x*y for x,y in zip(self,n)]
-        return Array(A)
-
-    def __truediv__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[x/y for x,y in zip(self,n)]
-        return Array(A)
-
-    def __rtruediv__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[y/x for x,y in zip(self,n)]
-        return Array(A)
-
-    def __pow__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[x**y for x,y in zip(self,n)]
-        return Array(A)
-
-    def __rpow__(self,n):
-        if isinstance(n, float) or isinstance(n, int):
-            n=[n for i in range(len(self))]
-        A=[y**x for x,y in zip(self,n)]
-        return Array(A)
-
-    def apply_func(self,func):
-        return Array(Vectorize(func)(self))
-
-    def __eq__(self,other):
-        out=all([eq(x,y) for x,y in zip(self,other)])
-        return out
+atan2=lambda x,y: mth.degrees(mth.atan2(y,x))
 
 
 def system2(A1,A2):
@@ -135,8 +43,7 @@ def system2(A1,A2):
         out=None
     return out
 
-def in_interval(x,a,b):
-    return (a <= x) and (x <= b)
+in_interval=lambda x,a,b: (a <= x) and (x <= b)
 
 def quad(a,b,c):
     d=b**2-4*a*c
@@ -147,4 +54,20 @@ def quad(a,b,c):
         out=None 
     return out
 
-    
+col_vector=lambda A: np.reshape(A,(len(A),1))
+
+def system(A,B):
+    """ returns the solution, `x`, of the linear system, `Ax=B` 
+        where `x` and `B` are column vectors and `A` is a matrix. 
+    """
+    return np.linalg.solve(A, B)
+
+def matmul(A,B):
+    return np.linalg.matmul(A,B)
+
+def det(A):
+    """ returns the determinant,`np.linalg.det(A)`, of the matrix A """
+    return np.linalg.det(A)
+
+vectorize=lambda func: np.vectorize(func)
+
