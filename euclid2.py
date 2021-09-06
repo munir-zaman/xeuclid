@@ -7,24 +7,56 @@ class GObject(object):
         pass
 
 
-origin=col_vector(np.array([0,0]))
+origin=np.array([[0],[0]])
 
 rotation_matrix=lambda theta: np.array([[cos(theta),-1*sin(theta)],
                                         [sin(theta),   cos(theta)]])
 
 rotate=lambda A,B,theta: np.matmul(rotation_matrix(theta),A-B)+B
 
-
-
-def p2l(P1,P2):
+def points_to_line(P1,P2):
     """ Returns the line through P1 and P2 """
-    x1,y1=P1
-    x2,y2=P2
-    A,B,C=(y1-y2),(x2-x1),(y2-y1)*x1-(x2-x1)*y1 
-    return Line(A, B, C)
+    A=P1
+    v=P2-P1
+    return Line(A, v)
 
-def points_to_line(p1,p2):
-    return p2l(p1, p2)
+
+class Line(GObject):
+    def __init__(self,A,v):
+        self.A=A
+        self.v=v
+        self.B=self.A+self.v
+
+    def __call__(self,t): #ok
+        return self.A+self.v*t
+
+    def __contains__(self,P): #ok
+        v1,v2=self.v[0,0],self.v[1,0]
+        V=np.array([[v1,0],
+                    [0,v2]],dtype=np.float64)
+        P_=P-self.A
+        T=system(V,P_)
+        return mth.isclose(T[0,0],T[1,0],abs_tol=abs_tol)
+
+    def intersection(self,line): #ok
+        v1x,v1y=self.v[0,0],self.v[1,0]
+        v2x,v2y=line.v[0,0],line.v[1,0]
+        V=np.array([[v1x,-1*v2x],
+                    [v1y,-1*v2y]])
+
+        A=line.A-self.A
+        T=system(V, A)
+        print(T)
+        t1=T[0,0]
+        out=self(t1)
+
+        return out
+
+    def rotate(self,P,theta): #ok
+        A_,B_=rotate(self.A, P, theta),rotate(self.B, P, theta)
+        v_=B_-A_
+        return Line(A_, v_)
+        
 
 def points_to_segment(p1,p2):
     return Segment(p1, p2)
@@ -97,210 +129,11 @@ def mid(p1,p2):
     return Point([(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
 
 
-class Line(GObject):
-
-    def __init__(self,a,b,c):
-        """ Line ax+by+c=0
-        """
-
-        self.a,self.b,self.c=a,b,c
-
-        if b!=0:
-            self.yint=-c/b
-            self.slope=-a/b
-        else:
-            self.yint="inf"
-            self.slope="inf"
-
-        if a!=0:
-            self.xint=-c/a
-        else:
-            self.xint="inf"
-
-        # f(0)=y-intercept
-        # f(x-intercept)=0
-        
-        if self.slope!="inf":
-            self.xtheta=atan(self.slope)
-        else:
-            self.xtheta=90
-
-        if self.slope!=0 and self.slope!="inf":
-            self.ytheta=atan(self.slope**(-1))
-        elif self.slope=="inf":
-            self.ytheta=0
-        elif self.slope==0:
-            self.ytheta=90
-
-        self.obj_type="Line"
-
-    def __repr__(self):
-        return f"{self.a}*x+{self.b}*y+{self.c}=0"
-
-    def __str__(self):
-        return str(f"{self.a}*x+{self.b}*y+{self.c}=0") 
-    
-    def explicit(self):
-        print(f"{self.slope}*x+{self.yint}")
-        return [self.slope,self.yint]
-
-    def __call__(self,x):
-        if self.slope!="inf":
-            out=self.slope*x+self.yint
-        else:
-            print(str(self))
-            if x==-self.c/self.a:
-                out=1
-            else:
-                out="inf"
-
-        return out
-
-    def __eq__(self,line):
-
-        if self.intersection(line,list) and len(line)==3:
-            line=Line(*line)
-
-        try:
-            out=(self.angle(line)==0)
-        except:
-            out=False
-
-        return out
-
-    def __and__(self,line):
-        """ returns the intersection of line and self """
-        return self.intersection(line)
-
-    def __xor__(self,line):
-        """ returns the angle between self and line """
-        return self.angle(line)
-
-    def __add__(self,other):
-        out=None
-        if isinstance(other, list):
-            other=Array(other)
-        p1,p2=self.get_unique_points()
-        out=p2l(p1+other,p2+other)
-
-        return out
-
-    def __radd__(self,other):
-        return self+other
-
-    def __sub__(self,other):
-        if isinstance(other, list):
-            other=-Array(other)
-        else:
-            other=-other
-
-        return self+other
-
-    def __rsub__(self,other):
-        out=None
-        if isinstance(other, list):
-            other=Array(other)
-        p1,p2=self.get_unique_points()
-        out=p2l(other-p1,other-p2)
-
-        return out
-
-    def contains(self,p):
-        """ checks if the point "p" is on the line "self" """
-        px,py=p
-        out=(self.a*px+self.b*py+self.c==0)
-        return out
-
-    def shift(self,*dv):
-        """ Translates/Shifts the line.
-            [dx,dy]: list of len 2
-            Applies the translation:
-            [x,y] --> [x+dx,y+dy]
-        """
-        if len(dv)==1:
-            dv=dv[0]
-        dx,dy=dv
-        return Line(self.a, self.b, self.c-self.a*dx-self.b*dy)
-
-    def goto_point(self,point):
-        """ shifts the point to point "point" """
-        p=point
-        if self.b!=0:
-            A=-self.slope
-            B=1
-            C=-(A*p[0]+B*p[1])
-        else:
-            A=self.a
-            B=0
-            C=-(A*p[0]+B*p[1])
-
-        return Line(A, B, C)
-
-    def parallel(self,point):
-        """ returns the parallel line through point "point" """
-        line=self
-        px,py=point
-        if line.b !=0:
-            A=-line.slope
-            B=1
-        else:
-            B=0
-            A=line.a
-        C=-(A*px+B*py)
-
-        return Line(A, B, C)
-
-    def perpendicular(self,point):
-        """ returns the perpendicular line through point "point" """
-        line=self
-        p=point
-        xtheta=(line.xtheta+90)%180
-        A=-tan(xtheta)
-        B=1
-        C=-(A*p[0]+B*p[1])
-        return Line(A, B, C)
-
-    def angle(self,line):
-        """ returns the angle between line "self" and line "line" """
-        line1=self
-        line2=line
-        angle=(line1.xtheta-line2.xtheta)%180
-        return angle
-
-    def distance(self,point):
-        ''' returns the distance between point "point" and line "self" '''
-
-        line=self
-        px,py=point
-        perp=line.perpendicular(point)
-        intersect=perp & line
-
-        return dist(point, intersect)
-
-    def intersection(self,line):
-        """ returns the intersection point of "self" and line "line" """
-        l1,l2=self,line
-        return Point(system2([l1.a,l1.b,l1.c],[l2.a,l2.b,l2.c]))
-
-    def rotate(self,point,angle):
-        """ rotates the line "self" around point "pont" by an angle "angle" """
-        func=lambda x,y: Point([x,y]).rotate(point,angle)
-        line=apply_transformation(self, func)
-        return line
-
-    def get_unique_points(self):
-        p1,p2=None,None
-        if self.b==0:
-            p1=Point([-self.c/self.a,1])
-            p2=Point([-self.c/self.a,2])
-        else:
-            p1=Point([1,-(self.a/self.b)*1-(self.c/self.b)])
-            p2=Point([2,-(self.a/self.b)*2-(self.c/self.b)])
-
-        return p1,p2 
-
-yaxis=Line(1,0,0)
-xaxis=Line(0,1,0)
+x_vect=np.array([[1],[0]])
+y_vect=np.array([[0],[1]])
+zero_vect=np.array([[0],[0]])
+y_axis=Line(zero_vect,x_vect)
+x_axis=Line(zero_vect,y_vect)
 
 
 class Segment(GObject):
