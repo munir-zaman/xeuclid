@@ -14,31 +14,116 @@ rotation_matrix=lambda theta: np.array([[cos(theta),-1*sin(theta)],
 
 rotate=lambda A,B,theta: np.matmul(rotation_matrix(theta),A-B)+B
 
-def points_to_line(P1,P2):
-    """ Returns the line through P1 and P2 """
-    A=P1
-    v=P2-P1
-    return Line(A, v)
+def angle(A,B,C):
+    """ returns the angle <ABC 
+        A,B,C : np.array([[x],
+                          [y]])
+    """
+    a1,a2=row_vector(A)
+    b1,b2=row_vector(B)
+    c1,c2=row_vector(C)
+    #x,y coordinates
+
+    A1,A2=a1-b1,a2-b2
+    B1,B2=0,0
+    C1,C2=c1-b1,c2-b2
+    #translate [x,y] -> [x-b1,y-b2]
+
+    t1=atan2(A1,A2)
+    t2=atan2(C1,C2)
+
+    return (t2-t1)%360
+
+def angle_between_vectors(v1,v2):
+    return angle(v1, origin, v2)
+
+def angle_bisector(A,B,C):
+    """ returns the angle bisector of angle <ABC"""
+    a1,a2=row_vector(A)
+    b1,b2=row_vector(B)
+    c1,c2=row_vector(C)
+    #x,y coordinates
+
+    A1,A2=a1-b1,a2-b2
+    B1,B2=0,0
+    C1,C2=c1-b1,c2-b2
+    #translate [x,y] -> [x-b1,y-b2]
+
+    t1=atan2(A1,A2)
+    t2=atan2(C1,C2)
+    T=(((t2-t1)%360)/2)+t1
+    R=np.array([[cos(T)],
+                [sin(T)]])
+
+    line=Line(np.array([[B1],[B2]]),R)
+    line=line+ np.array([[b1],
+                         [b2]])
+
+    return line
+
 
 
 class Line(GObject):
-    def __init__(self,A,v):
+    def __init__(self,A,B):
         self.A=A
-        self.v=v
-        self.B=self.A+self.v
+        self.B=B
+        self.v=self.B-self.A
 
-    def __call__(self,t): #ok
+    def __call__(self,t):
+        """ evaluates l(t)= A+ v*t
+            input(s):
+                t: type= float or int
+            output(s):
+                P: type= np.array([[Px],
+                                   [Py]])
+         """
         return self.A+self.v*t
 
-    def __contains__(self,P): #ok
+    def __repr__(self):
+        return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t"
+
+    def __str__(self):
+        return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t")
+
+    def __contains__(self,P):
+        return self.inv(P)!=None
+
+    def inv(self,P):
         v1,v2=self.v[0,0],self.v[1,0]
         V=np.array([[v1,0],
                     [0,v2]],dtype=np.float64)
         P_=P-self.A
         T=system(V,P_)
-        return mth.isclose(T[0,0],T[1,0],abs_tol=abs_tol)
+        if not mth.isclose(T[0,0],T[1,0],abs_tol=abs_tol):
+            print(f"({P[0,0]},{P[1,0]}) not in {str(self)}")
+            T=np.array([[None],[None]])
+        return T[0,0]
 
-    def intersection(self,line): #ok
+    def __add__(self,vector):
+        return Line(self.A+vector, self.B+vector)
+
+    def __radd__(self,vector):
+        return Line(self.A+vector, self.B+vector)
+
+    def __sub__(self,vector):
+        return Line(self.A-vector, self.B-vector)
+
+    def __rsub__(self,vector):
+        return Line(vector-self.A, vector-self.B)
+
+    def __mul__(self,value):
+        return Line(value*self.A, value*self.B)
+
+    def __rmul__(self,value):
+        return Line(value*self.A, value*self.B)
+
+    def __truediv__(self,value):
+        return Line(self.A/value, self.B/value)
+
+    def matmul(self,vector):
+        return Line(matmul(self.A, vector), matmul(self.B, vector))
+
+    def intersection(self,line):
         v1x,v1y=self.v[0,0],self.v[1,0]
         v2x,v2y=line.v[0,0],line.v[1,0]
         V=np.array([[v1x,-1*v2x],
@@ -52,11 +137,137 @@ class Line(GObject):
 
         return out
 
-    def rotate(self,P,theta): #ok
+    def rotate(self,P,theta):
         A_,B_=rotate(self.A, P, theta),rotate(self.B, P, theta)
         v_=B_-A_
         return Line(A_, v_)
-        
+
+    def parallel_line(self,P):
+        return Line(P, self.v+P)
+
+    def perpendicular_line(self,P):
+        return Line(P, rotate(self.v,origin,90)+P)
+
+    def __or__(self,line):       
+        v1x,v1y=self.v[0,0],self.v[1,0]
+        v2x,v2y=line.v[0,0],line.v[1,0]
+        V=np.array([[v1x,-1*v2x],
+                    [v1y,-1*v2y]])
+
+        return isclose(det(V),0.0)
+
+    def __and__(self,line):
+        return self.intersection(line)
+
+    def __xor__(self,line):
+        v1=row_vector(self.v)
+        v2=row_vector(line.v)
+        return isclose(np.dot(v1,v2),0)
+
+    def isperp(self,line):
+        return self ^ line
+
+    def isparallel(self,line):
+        return self & line    
+
+    def angle(self,line):
+        v1=self.v
+        v2=line.v
+        theta=angle_between_vectors(v1, v2)%180
+        return theta
+
+
+def param_to_impl_line(line):
+    Ax,Ay=row_vector(line.A)
+    vx,vy=row_vector(line.v)
+    print(f"{-1*vy}*x+ {vx}*y+ {vy*Ax-vx*Ay}")
+    return np.array([-1*vy, vx, vy*Ax-vx*Ay])
+
+def impl_to_param_line(line):
+    return NotImplemented
+
+def dist(p1,p2):
+    """ Return distance between p1 and p2 """
+    return mth.sqrt((p1[0,0]-p2[0,0])**2+(p1[1,0]-p2[1,0])**2)
+
+def mid(p1,p2):
+    """ Return midpoint of p1 and p2 """
+    return Point([(p1[0,0]+p2[0,0])/2,(p1[1,0]+p2[1,0])/2])
+
+
+x_vect=np.array([[1],[0]])
+y_vect=np.array([[0],[1]])
+zero_vect=np.array([[0],[0]])
+y_axis=Line(zero_vect,x_vect)
+x_axis=Line(zero_vect,y_vect)
+
+def collinear(*points):
+    """ collinear(*points)
+
+        checks if the given set of points are collinear 
+        If,the given set of points are collinear: 
+            returns the line through the given set of points. 
+        Else, 
+            returns None
+
+        Examples:
+            In [1]: collinear([1,-1/2],[2,0],[4,1],[6,2])
+            True
+            Out[1]: -0.5*x+1*y+1.0=0
+
+            In [2]: collinear([1,2],[1,3],[1,6],[1,7])
+            True
+            Out[2]: -1*x+0*y+1=0
+
+            In [3]: collinear([1,-1/2],[2,0],[4,1],[6,0])
+            False
+    """
+    A,B=points[0],points[1]
+    AB=points_to_line(A,B)
+    out=True
+
+    for p in points:
+        out=out and (p in AB)
+        if not out:
+            break
+
+    if out:
+        print(True)
+        line=AB
+    else:
+        print(False)
+        line=None
+
+    return line
+
+def concurrent(*lines):
+    """ checks if the given set of lines are concurrent """
+    ints=[]
+    out=True
+
+    for l in range(1,len(lines)):
+
+        if not isinstance(lines[l],Line):
+            lines[l]=points_to_line(*lines[l])
+        if not isinstance(lines[l-1],Line):
+            lines[l]=points_to_line(*lines[l-1])
+
+        int_=lines[l].intersection(lines[l-1])
+        ints.append(int_)
+
+        if not len(ints)<2:
+            out=out and (ints[-1]==ints[-2])
+
+        if not out:
+            break
+
+    if not out:
+        ints[-1]=None
+
+    print(out)
+    return ints[-1]
+
+
 
 def points_to_segment(p1,p2):
     return Segment(p1, p2)
@@ -78,64 +289,7 @@ def apply_transformation(obj,func):
         out=[points_to_gobject(Func(gobj.get_unique_points()),gobj.obj_type) for gobj in obj]
 
     return out
-
-def angle(A,B,C):
-    """ returns the angle <ABC 
-        A,B,C : List of length 2 [x,y]
-    """
-    a1,a2=A
-    b1,b2=B
-    c1,c2=C
-    #x,y coordinates
-
-    A1,A2=a1-b1,a2-b2
-    B1,B2=0,0
-    C1,C2=c1-b1,c2-b2
-    #translate [x,y] -> [x-b1,y-b2]
-
-    t1=atan2(A1,A2)
-    t2=atan2(C1,C2)
-
-    return (t2-t1)%360
-
-def angle_bisector(A,B,C):
-    """ returns the angle bisector of angle <ABC"""
-    a1,a2=A
-    b1,b2=B
-    c1,c2=C
-    #x,y coordinates
-
-    A1,A2=a1-b1,a2-b2
-    B1,B2=0,0
-    C1,C2=c1-b1,c2-b2
-    #translate [x,y] -> [x-b1,y-b2]
-
-    t1=atan2(A1,A2)
-    t2=atan2(C1,C2)
-    T=(((t2-t1)%360)/2)+t1
-    R=[cos(T),sin(T)]
-
-    line=p2l([B1,B2],R)
-    line=line.shift([b1,b2])
-
-    return line
-
-def dist(p1,p2):
-    """ Return distance between p1 and p2 """
-    return mth.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
-
-def mid(p1,p2):
-    """ Return midpoint of p1 and p2 """
-    return Point([(p1[0]+p2[0])/2,(p1[1]+p2[1])/2])
-
-
-x_vect=np.array([[1],[0]])
-y_vect=np.array([[0],[1]])
-zero_vect=np.array([[0],[0]])
-y_axis=Line(zero_vect,x_vect)
-x_axis=Line(zero_vect,y_vect)
-
-
+    
 class Segment(GObject):
     """docstring for Segment"""
     def __init__(self, A, B):
@@ -202,74 +356,6 @@ class Segment(GObject):
 
     def get_unique_points(self):
         return self.A,self.B
-
-
-def collinear(*points):
-    """ collinear(*points)
-
-        checks if the given set of points are collinear 
-        If,the given set of points are collinear: 
-            returns the line through the given set of points. 
-        Else, 
-            returns None
-
-        Examples:
-            In [1]: collinear([1,-1/2],[2,0],[4,1],[6,2])
-            True
-            Out[1]: -0.5*x+1*y+1.0=0
-
-            In [2]: collinear([1,2],[1,3],[1,6],[1,7])
-            True
-            Out[2]: -1*x+0*y+1=0
-
-            In [3]: collinear([1,-1/2],[2,0],[4,1],[6,0])
-            False
-    """
-    A,B=points[0],points[1]
-    AB=p2l(A,B)
-    out=True
-
-    for p in points:
-        out=out and AB.contains(p)
-        if not out:
-            break
-
-    if out:
-        print(True)
-        line=AB
-    else:
-        print(False)
-        line=None
-
-    return line
-
-def concurrent(*lines):
-    """ checks if the given set of lines are concurrent """
-    ints=[]
-    out=True
-
-    for l in range(1,len(lines)):
-
-        if not isinstance(lines[l],Line):
-            lines[l]=p2l(*lines[l])
-        if not isinstance(lines[l-1],Line):
-            lines[l]=p2l(*lines[l-1])
-
-        int_=lines[l].intersection(lines[l-1])
-        ints.append(int_)
-
-        if not len(ints)<2:
-            out=out and (ints[-1]==ints[-2])
-
-        if not out:
-            break
-
-    if not out:
-        ints[-1]=None
-
-    print(out)
-    return ints[-1]
-
 
 
 class Polygon(GObject):
