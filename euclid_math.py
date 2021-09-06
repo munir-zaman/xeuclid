@@ -6,7 +6,7 @@ abs_tol=10**-5
 
 isclose=lambda a,b: mth.isclose(a,b,abs_tol=abs_tol)
 
-sqrt=lambda n: mth.sqrt(n) 
+sqrt=lambda n: mth.sqrt(n)
 
 sin=lambda a: mth.sin(mth.radians(a))
 
@@ -24,7 +24,7 @@ atan2=lambda x,y: mth.degrees(mth.atan2(y,x))
 
 
 def system2(A1,A2):
-    """ returns the solution to the following system of linear equations, 
+    """ returns the solution to the following system of linear equations,
         A1[0]x+A1[1]y+A1[2]=0
         A2[0]x+A2[1]y+A2[2]=0
 
@@ -51,14 +51,15 @@ def quad(a,b,c):
         out=[(-b+d)/2*a,(-b-d)/2*a]
     else:
         print("solution does not exist in R")
-        out=None 
+        out=None
     return out
 
 col_vector=lambda A: np.reshape(A,(len(A),1))
+row_vector=lambda A: np.reshape(A,(len(A),))
 
 def system(A,B):
-    """ returns the solution, `x`, of the linear system, `Ax=B` 
-        where `x` and `B` are column vectors and `A` is a matrix. 
+    """ returns the solution, `x`, of the linear system, `Ax=B`
+        where `x` and `B` are column vectors and `A` is a matrix.
     """
     if np.linalg.det(A)!=0:
         out=np.linalg.solve(A, B)
@@ -75,4 +76,7 @@ def det(A):
     return np.linalg.det(A)
 
 vectorize=lambda func: np.vectorize(func)
+
+strv=np.vectorize(str)
+
 
