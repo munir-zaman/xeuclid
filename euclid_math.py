@@ -4,7 +4,7 @@ import numpy as np
 
 abs_tol=10**-5
 
-eq=lambda a,b: mth.isclose(a,b,abs_tol=abs_tol)
+isclose=lambda a,b: mth.isclose(a,b,abs_tol=abs_tol)
 
 sqrt=lambda n: mth.sqrt(n) 
 
@@ -60,7 +60,12 @@ def system(A,B):
     """ returns the solution, `x`, of the linear system, `Ax=B` 
         where `x` and `B` are column vectors and `A` is a matrix. 
     """
-    return np.linalg.solve(A, B)
+    if np.linalg.det(A)!=0:
+        out=np.linalg.solve(A, B)
+    else:
+        print("solution does not exist in R")
+        out=None
+    return out
 
 def matmul(A,B):
     return np.matmul(A,B)
