@@ -32,7 +32,7 @@ def angle(A,B,C):
     t1=atan2(A1,A2)
     t2=atan2(C1,C2)
 
-    return (t2-t1)%360
+    return round((t2-t1)%360, 8)
 
 def angle_between_vectors(v1,v2):
     return angle(v1, origin, v2)
@@ -56,8 +56,7 @@ def angle_bisector(A,B,C):
                 [sin(T)]])
 
     line=Line(np.array([[B1],[B2]]),R)
-    line=line+ np.array([[b1],
-                         [b2]])
+    line=line+np.array([[b1],[b2]])
 
     return line
 
@@ -123,24 +122,27 @@ class Line(GObject):
     def matmul(self,vector):
         return Line(matmul(self.A, vector), matmul(self.B, vector))
 
-    def intersection(self,line):
+    def intersection(self,line,get_t_value=False):
         v1x,v1y=self.v[0,0],self.v[1,0]
         v2x,v2y=line.v[0,0],line.v[1,0]
-        V=np.array([[v1x,-1*v2x],
-                    [v1y,-1*v2y]])
 
-        A=line.A-self.A
-        T=system(V, A)
-        print(T)
-        t1=T[0,0]
-        out=self(t1)
+        V=np.array([[v1x,-1*v2x],[v1y,-1*v2y]])
+
+        if not (self | line):
+            A=line.A-self.A
+            T=system(V, A)
+            print(T)
+            t1=T[0,0]
+            out=self(t1) if not get_t_value else T
+        else:
+            print("The Lines are Parallel")
+            out=None
 
         return out
 
     def rotate(self,P,theta):
         A_,B_=rotate(self.A, P, theta),rotate(self.B, P, theta)
-        v_=B_-A_
-        return Line(A_, v_)
+        return Line(A_, B_)
 
     def parallel_line(self,P):
         return Line(P, self.v+P)
@@ -168,19 +170,19 @@ class Line(GObject):
         return self ^ line
 
     def isparallel(self,line):
-        return self & line    
+        return self | line    
 
     def angle(self,line):
         v1=self.v
         v2=line.v
         theta=angle_between_vectors(v1, v2)%180
-        return theta
+        return round(theta,8)
 
 
 def param_to_impl_line(line):
     Ax,Ay=row_vector(line.A)
     vx,vy=row_vector(line.v)
-    print(f"{-1*vy}*x+ {vx}*y+ {vy*Ax-vx*Ay}")
+    print(f"{-1*vy}*x+ {vx}*y+ {vy*Ax-vx*Ay}= 0")
     return np.array([-1*vy, vx, vy*Ax-vx*Ay])
 
 def impl_to_param_line(line):
@@ -198,8 +200,8 @@ def mid(p1,p2):
 x_vect=np.array([[1],[0]])
 y_vect=np.array([[0],[1]])
 zero_vect=np.array([[0],[0]])
-y_axis=Line(zero_vect,x_vect)
-x_axis=Line(zero_vect,y_vect)
+y_axis=Line(zero_vect,y_vect)
+x_axis=Line(zero_vect,x_vect)
 
 def collinear(*points):
     """ collinear(*points)
@@ -209,18 +211,6 @@ def collinear(*points):
             returns the line through the given set of points. 
         Else, 
             returns None
-
-        Examples:
-            In [1]: collinear([1,-1/2],[2,0],[4,1],[6,2])
-            True
-            Out[1]: -0.5*x+1*y+1.0=0
-
-            In [2]: collinear([1,2],[1,3],[1,6],[1,7])
-            True
-            Out[2]: -1*x+0*y+1=0
-
-            In [3]: collinear([1,-1/2],[2,0],[4,1],[6,0])
-            False
     """
     A,B=points[0],points[1]
     AB=points_to_line(A,B)
