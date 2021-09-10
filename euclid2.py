@@ -32,7 +32,7 @@ def angle(A,B,C):
     t1=atan2(A1,A2)
     t2=atan2(C1,C2)
 
-    return round((t2-t1)%360, 8)
+    return rnd((t2-t1)%360)
 
 def angle_between_vectors(v1,v2):
     return angle(v1, origin, v2)
@@ -60,12 +60,33 @@ def angle_bisector(A,B,C):
 
     return line
 
+#intersections Line
+
+intersection_line_line(line1,line2):
+    v1x,v1y=line1.v[0,0],line1.v[1,0]
+    v2x,v2y=line2.v[0,0],line2.v[1,0]
+    V=np.array([[v1x,-1*v2x],[v1y,-1*v2y]])
+
+    if not (self | line):
+        A=line2.A-line1.A
+        T=system(V, A)
+        print(T)
+        t1=T[0,0]
+        out=line1(t1)
+    else:
+        print("The Lines are Parallel")
+        out=None
+
+    return out
+
+
 
 class Line(GObject):
     def __init__(self,A,B):
         self.A=A
         self.B=B
         self.v=self.B-self.A
+        self.type='line'
 
     def __call__(self,t):
         """ evaluates l(t)= A+ v*t
@@ -75,7 +96,7 @@ class Line(GObject):
                 P: type= np.array([[Px],
                                    [Py]])
          """
-        return self.A+self.v*t
+        return rndv(self.A+self.v*t)
 
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t"
@@ -89,7 +110,8 @@ class Line(GObject):
     def inv(self,P):
         Ax,Ay=row_vector(self.A)
         vx,vy=row_vector(self.v)
-        Px,Py=row_vector(P)
+        Px,Py=rndv(row_vector(P))
+
 
         if (not isclose(vx,0)) and (not isclose(vy,0)):
             t1=(Px-Ax)/vx
@@ -128,22 +150,8 @@ class Line(GObject):
     def matmul(self,vector):
         return Line(matmul(self.A, vector), matmul(self.B, vector))
 
-    def intersection(self,line,get_t_value=False):
-        v1x,v1y=self.v[0,0],self.v[1,0]
-        v2x,v2y=line.v[0,0],line.v[1,0]
-
-        V=np.array([[v1x,-1*v2x],[v1y,-1*v2y]])
-
-        if not (self | line):
-            A=line.A-self.A
-            T=system(V, A)
-            print(T)
-            t1=T[0,0]
-            out=self(t1) if not get_t_value else T
-        else:
-            print("The Lines are Parallel")
-            out=None
-
+    def intersection(self,obj):
+        out=eval(f"intersection_line_{obj.type}(self, obj)")
         return out
 
     def rotate(self,P,theta):
@@ -157,6 +165,7 @@ class Line(GObject):
         return Line(P, rotate(self.v,origin,90)+P)
 
     def __or__(self,line):
+        """ Checks if `self` and `line` are parallel """
         v1x,v1y=self.v[0,0],self.v[1,0]
         v2x,v2y=line.v[0,0],line.v[1,0]
         V=np.array([[v1x,-1*v2x],
@@ -165,9 +174,11 @@ class Line(GObject):
         return isclose(det(V),0.0)
 
     def __and__(self,line):
+        """Returns the intersection point of `self` and `line`"""
         return self.intersection(line)
 
     def __xor__(self,line):
+        """ Chceks if `self` and `line` are perpendicular """
         v1=row_vector(self.v)
         v2=row_vector(line.v)
         return isclose(np.dot(v1,v2),0)
@@ -285,7 +296,8 @@ def apply_transformation(obj,func):
         out=[points_to_gobject(Func(gobj.get_unique_points()),gobj.obj_type) for gobj in obj]
 
     return out
-    
+
+
 class Segment(GObject):
     """docstring for Segment"""
     def __init__(self, A, B):
