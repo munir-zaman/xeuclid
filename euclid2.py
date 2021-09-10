@@ -60,25 +60,39 @@ def angle_bisector(A,B,C):
 
     return line
 
-#intersections Line
-
-intersection_line_line(line1,line2):
+def intersection_line_line(line1,line2):
     v1x,v1y=line1.v[0,0],line1.v[1,0]
     v2x,v2y=line2.v[0,0],line2.v[1,0]
+
     V=np.array([[v1x,-1*v2x],[v1y,-1*v2y]])
 
-    if not (self | line):
+    if not (line1 | line2):
         A=line2.A-line1.A
         T=system(V, A)
         print(T)
         t1=T[0,0]
         out=line1(t1)
     else:
-        print("The Lines are Parallel")
+        print("The Lines are Parallel. Returned None")
         out=None
 
     return out
 
+def intersection_line_segment(line,segment):
+    int_=intersection_line_line(line, segment.line)
+    if int_!=None:
+        out=int_ if (int_ in segment) else None
+    else:
+        out=None
+    return out
+
+def intersection_segment_segment(segment1,segment2):
+    int_=intersection_line_line(segment1.line, segment2.line)
+    if int_!=None:
+        out=int_ if (int_ in segment1) and (int_ in segment2) else None
+    else:
+        out=None
+    return out
 
 
 class Line(GObject):
@@ -87,6 +101,9 @@ class Line(GObject):
         self.B=B
         self.v=self.B-self.A
         self.type='line'
+
+        if isclose(self.v[0,0], 0) and isclose(self.v[1,0], 0):
+            print('WARNING V=[0,0]')
 
     def __call__(self,t):
         """ evaluates l(t)= A+ v*t
@@ -111,7 +128,6 @@ class Line(GObject):
         Ax,Ay=row_vector(self.A)
         vx,vy=row_vector(self.v)
         Px,Py=rndv(row_vector(P))
-
 
         if (not isclose(vx,0)) and (not isclose(vy,0)):
             t1=(Px-Ax)/vx
@@ -147,15 +163,21 @@ class Line(GObject):
     def __truediv__(self,value):
         return Line(self.A/value, self.B/value)
 
-    def matmul(self,vector):
-        return Line(matmul(self.A, vector), matmul(self.B, vector))
+    def matmul(self,matrix):
+        return Line(matmul(matrix, self.A), matmul(matrix, self.B))
 
     def intersection(self,obj):
-        out=eval(f"intersection_line_{obj.type}(self, obj)")
+        if obj.type=="line":
+            out=intersection_line_line(self, obj)
+        elif obj.type=='segment':
+            out=intersection_line_segment(self, obj)
+        else:
+            out=None
+
         return out
 
-    def rotate(self,P,theta):
-        A_,B_=rotate(self.A, P, theta),rotate(self.B, P, theta)
+    def rotate(self, point, angle):
+        A_,B_=rotate(self.A, point, angle),rotate(self.B, point, angle)
         return Line(A_, B_)
 
     def parallel_line(self,P):
@@ -173,12 +195,12 @@ class Line(GObject):
 
         return isclose(det(V),0.0)
 
-    def __and__(self,line):
+    def __and__(self,obj):
         """Returns the intersection point of `self` and `line`"""
-        return self.intersection(line)
+        return self.intersection(obj)
 
     def __xor__(self,line):
-        """ Chceks if `self` and `line` are perpendicular """
+        """ Checks if `self` and `line` are perpendicular """
         v1=row_vector(self.v)
         v2=row_vector(line.v)
         return isclose(np.dot(v1,v2),0)
@@ -275,95 +297,69 @@ def concurrent(*lines):
     return ints[-1]
 
 
-
-def points_to_segment(p1,p2):
-    return Segment(p1, p2)
-
-def points_to_polygon(*p):
-    return Polygon(*p)
-
-def points_to_gobject(points,obj_type):
-    return eval(f"points_to_{obj_type.lower()}(*{points})")
-
-def apply_transformation(obj,func):
-
-    Func=lambda L: [func(*l) for l in L]
-    out=[]
-
-    if not isinstance(obj, list):
-        out=points_to_gobject(Func(obj.get_unique_points()),obj.obj_type)
-    else:
-        out=[points_to_gobject(Func(gobj.get_unique_points()),gobj.obj_type) for gobj in obj]
-
-    return out
-
-
 class Segment(GObject):
-    """docstring for Segment"""
     def __init__(self, A, B):
-
-        if not isinstance(A, Point):
-            A=Point(A)
-        if not isinstance(B, Point):
-            B=Point(B)
-
         self.A=A
         self.B=B
-        self.D=self.B-self.A
-        self.line=p2l(self.A, self.B)
-        self.obj_type="Segment"
+        self.v=self.B-self.A
+        self.type="segment"
+        self.line=Line(self.A, self.B)
 
-    def __call__(self,t):
-        return self.A+self.D*t
+    def __call__(self, t):
+        return rndv(self.A+ self.v*t)
 
     def __repr__(self):
-        return f"{self.A}+{self.D}*t"
+        return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t in [0, 1]"
 
-    def contains(self,point):
-        Ax,Ay=self.A
-        dx,dy=self.D
-        x,y=point
-        t=(x-Ax)/dx
-        out=eq(Ay+dy*t,y) and ((0 <= t) and (t <= 1))  
+    def __str__(self):
+        return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t in [0, 1]")
+
+    def __contains__(self,P):
+        return self.inv(P)!=None
+
+    def inv(self,P):
+        out_=self.line.inv(P)
+        if out_!=None:
+            out= out_ if (0 <= out_ <= 1) else None
+        else:
+            out=None
+
         return out
 
-    def rotate(self,point,angle):
-        A_=self.A.rotate(point, angle)
-        B_=self.B.rotate(point, angle)
+    def __add__(self,vector):
+        return Segment(self.A+vector, self.B+vector)
+
+    def __radd__(self,vector):
+        return Segment(self.A+vector, self.B+vector)
+
+    def __sub__(self,vector):
+        return Segment(self.A-vector, self.B-vector)
+
+    def __rsub__(self,vector):
+        return Segment(vector-self.A, vector-self.B)
+
+    def __mul__(self,value):
+        return Segment(value*self.A, value*self.B)
+
+    def __rmul__(self,value):
+        return Segment(value*self.A, value*self.B)
+
+    def __truediv__(self,value):
+        return Segment(self.A/value, self.B/value)
+
+    def intersection(self,obj):
+        if obj.type=='line':
+            out=intersection_line_segment(obj, self)
+        elif obj.type=='segment':
+            out=intersection_segment_segment(self, obj)
+        else:
+            out=None
+
+        return out
+
+    def rotate(self, point, angle):
+        A_, B_= rotate(self.A, point, angle), rotate(self.B, point, angle)
         return Segment(A_, B_)
-
-    def intersection(self,other):
-        out=None
-        if isinstance(other, Segment):
-            A,B=self.A,self.D
-            C,D=other.A,other.D
-            Ax,Ay=A
-            Bx,By=B
-            Cx,Cy=C
-            Dx,Dy=D
-            A1=[Bx,-Dx,Ax-Cx]
-            A2=[By,-Dy,Ay-Cy]
-            u,v=system2(A1, A2)
-            exists=((0 <= u) and (u <= 1)) and ((0 <= v) and (v <= 1))
-            if exists:
-                print(f"t value: {u}, intersection point: {A+B*u}")
-                out=Point(A+B*u)
-                
-        elif isinstance(other, Line):
-            x,y=other.intersection(self.line)
-            A,B=self.A,self.D
-            Ax,Ay=A
-            Bx,By=B
-            t=(x-Ax)/Bx
-            exists=((0 <= t) and (t <= 1)) and eq(t,(y-Ay)/By)
-            if exists:
-                print(f"t value: {t}, intersection point: {A+B*t}")
-                out=Point(A+B*t)
-        
-        return out
-
-    def get_unique_points(self):
-        return self.A,self.B
 
 
 class Polygon(GObject):
