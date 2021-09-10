@@ -61,7 +61,6 @@ def angle_bisector(A,B,C):
     return line
 
 
-
 class Line(GObject):
     def __init__(self,A,B):
         self.A=A
