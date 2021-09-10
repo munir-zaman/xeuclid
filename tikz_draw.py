@@ -77,15 +77,14 @@ class Tikz():
         code=axis_code+axis_ticks_code
         self.write(code)
 
-    def draw_vector(vector,start=(0,0), config=def_vector_config):
+    def draw_vector(self,vector,start=(0,0), config=def_vector_config):
         X,Y=row_vector(vector)
 
         Config=f"[{config},->]" if (config!=None or config!='') else "[->]"
         code=f"""
-        %vector [{X}, {Y}]
-        \\draw{Config} {str(tuple(start))} -- {str((X,Y))};
-
-        """
+    %vector [{X}, {Y}]
+    \\draw{Config} {str(tuple(start))} -- {str((X,Y))};
+    """
         self.write(code)
 
 
