@@ -15,7 +15,7 @@ rotation_matrix=lambda theta: np.array([[cos(theta),-1*sin(theta)],
 rotate=lambda A,B,theta: np.matmul(rotation_matrix(theta),A-B)+B
 
 def angle(A,B,C):
-    """ returns the angle <ABC 
+    """ returns the angle <ABC
         A,B,C : np.array([[x],
                           [y]])
     """
@@ -68,6 +68,8 @@ class Line(GObject):
         self.B=B
         self.v=self.B-self.A
 
+        assert self.v!=np.array([[0],[0]])
+
     def __call__(self,t):
         """ evaluates l(t)= A+ v*t
             input(s):
@@ -88,15 +90,22 @@ class Line(GObject):
         return self.inv(P)!=None
 
     def inv(self,P):
-        v1,v2=self.v[0,0],self.v[1,0]
-        V=np.array([[v1,0],
-                    [0,v2]],dtype=np.float64)
-        P_=P-self.A
-        T=system(V,P_)
-        if not mth.isclose(T[0,0],T[1,0],abs_tol=abs_tol):
-            print(f"({P[0,0]},{P[1,0]}) not in {str(self)}")
-            T=np.array([[None],[None]])
-        return T[0,0]
+        Ax,Ay=row_vector(self.A)
+        vx,vy=row_vector(self.v)
+        Px,Py=row_vector(P)
+
+        if (not isclose(vx,0)) and (not isclose(vy,0)):
+            t1=(Px-Ax)/vx
+            t2=(Py-Ay)/vy
+        elif (isclose(vx,0)):
+            t2=(Py-Ay)/vy
+            t1=t2 if (Px==Ax) else None
+        elif (isclose(vy,0)):
+            t1=(Px-Ax)/vx
+            t2=t1 if (Py==Ay) else None
+
+        out=t1 if t1==t2 else None
+        return out
 
     def __add__(self,vector):
         return Line(self.A+vector, self.B+vector)
@@ -150,7 +159,7 @@ class Line(GObject):
     def perpendicular_line(self,P):
         return Line(P, rotate(self.v,origin,90)+P)
 
-    def __or__(self,line):       
+    def __or__(self,line):
         v1x,v1y=self.v[0,0],self.v[1,0]
         v2x,v2y=line.v[0,0],line.v[1,0]
         V=np.array([[v1x,-1*v2x],
@@ -170,7 +179,7 @@ class Line(GObject):
         return self ^ line
 
     def isparallel(self,line):
-        return self | line    
+        return self | line
 
     def angle(self,line):
         v1=self.v
