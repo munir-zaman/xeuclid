@@ -1,5 +1,10 @@
 *.pyc 
 *.swp
+*.log
+*.aux
+*.gz
+*.fls
+*.fdb_latexmk
 __pycahce__/
 old/
 doc/.ipynb_checkpoints/
