@@ -68,8 +68,6 @@ class Line(GObject):
         self.B=B
         self.v=self.B-self.A
 
-        assert self.v!=np.array([[0],[0]])
-
     def __call__(self,t):
         """ evaluates l(t)= A+ v*t
             input(s):
