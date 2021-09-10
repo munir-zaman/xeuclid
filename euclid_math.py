@@ -5,7 +5,7 @@ round_val=7
 abs_tol=10**-6
 
 isclose=lambda a,b: mth.isclose(a,b,abs_tol=abs_tol,rel_tol=0)
-rnd=lambda x: return round(x,round_val)
+rnd=lambda x: round(x,round_val)
 rndv=np.vectorize(rnd)
 
 sqrt=lambda n: mth.sqrt(n)
