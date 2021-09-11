@@ -28,6 +28,8 @@ pdflatex_command='pdflatex -shell-escape'
 def_vector_config="blue, thick"
 def_grid_config="cyan"
 def_point_config="fill=cyan!20!black, draw=black"
+def_path_config="black, thick"
+
 
 class Tikz():
     def __init__(self,file_name, preamble=def_preamble):
@@ -99,6 +101,17 @@ class Tikz():
     \\draw{Config} {str(tuple(start))} -- {str((X,Y))};
     """
         self.write(code)
+
+    def draw_path(self,*points, config=def_path_config):
+        points_xy=[(p[0,0], p[1,0]) for p in points]
+        path_string=""
+        for i in range(0,len(points_xy)-1):
+            path_string=path_string+f"{str(points_xy[i])} -- "
+        path_string=path_string+f"{str(points_xy[-1])};"
+        Config=f"[{config}]" if (config!=None or config!='') else ""
+
+        draw_path_code=f"\\draw{Config}  "+path_string
+        self.write(draw_path_code)
 
 
 
