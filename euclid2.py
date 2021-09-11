@@ -86,6 +86,31 @@ def intersection_line_segment(line,segment):
         out=None
     return out
 
+def intersection_line_ray(line,ray):
+    int_=intersection_line_line(line, ray.line)
+    if not isnone(int_):
+        out=int_ if (int_ in ray) else None
+    else:
+        out=None
+    return out
+
+def intersection_segment_ray(segment, ray):
+    int_=intersection_line_line(segment.line, ray.line)
+    if not isnone(int_):
+        out=int_ if (int_ in ray) and (int_ in segment) else None
+    else:
+        out=None
+    return out
+
+def intersection_ray_ray(ray1, ray2):
+    int_=intersection_line_line(ray1.line, ray2.line)
+    if not isnone(int_):
+        out=int_ if (int_ in ray1) and (int_ in ray2) else None
+    else:
+        out=None
+
+    return out
+
 def intersection_segment_segment(segment1,segment2):
     int_=intersection_line_line(segment1.line, segment2.line)
     if not isnone(int_):
@@ -172,8 +197,10 @@ class Line(GObject):
     def intersection(self,obj):
         if obj.type=="line":
             out=intersection_line_line(self, obj)
-        elif obj.type=='segment':
+        elif obj.type=="segment":
             out=intersection_line_segment(self, obj)
+        elif obj.type=="ray":
+            out=intersection_line_ray(self, obj)
         else:
             out=None
 
@@ -351,10 +378,12 @@ class Segment(GObject):
         return Segment(self.A/value, self.B/value)
 
     def intersection(self,obj):
-        if obj.type=='line':
+        if obj.type=="line":
             out=intersection_line_segment(obj, self)
-        elif obj.type=='segment':
+        elif obj.type=="segment":
             out=intersection_segment_segment(self, obj)
+        elif obj.type=="ray":
+            out=intersection_segment_ray(self, obj)
         else:
             out=None
 
@@ -363,6 +392,73 @@ class Segment(GObject):
     def rotate(self, point, angle):
         A_, B_= rotate(self.A, point, angle), rotate(self.B, point, angle)
         return Segment(A_, B_)
+
+
+class Ray(GObject):
+    def __init__(self, A, B):
+        self.A=A
+        self.B=B
+        self.v=self.B-self.A
+        self.type="ray"
+        self.line=Line(self.A, self.B)
+
+    def __call__(self, t):
+        return self.A+ self.v*t
+
+    def __repr__(self):
+        return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t >= 0"
+
+    def __str__(self):
+        return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t >= 0")
+
+    def __contains__(self, point):
+        return self.inv(point)!=None
+
+    def inv(self, point):
+        out_=self.line.inv(point)
+        if out_!=None:
+            out= out_ if (out_ >= 0) else None
+        else:
+            out=None
+
+        return out
+
+    def __add__(self,vector):
+        return Ray(self.A+vector, self.B+vector)
+
+    def __radd__(self,vector):
+        return Ray(self.A+vector, self.B+vector)
+
+    def __sub__(self,vector):
+        return Ray(self.A-vector, self.B-vector)
+
+    def __rsub__(self,vector):
+        return Ray(vector-self.A, vector-self.B)
+
+    def __mul__(self,value):
+        return Ray(value*self.A, value*self.B)
+
+    def __rmul__(self,value):
+        return Ray(value*self.A, value*self.B)
+
+    def __truediv__(self,value):
+        return Ray(self.A/value, self.B/value)
+
+    def intersection(self,obj):
+        if obj.type=="line":
+            out=intersection_line_ray(obj, self)
+        elif obj.type=="segment":
+            out=intersection_segment_ray(obj, self)
+        elif obj.type=="ray":
+            out=intersection_ray_ray(self, obj)
+        else:
+            out=None
+
+        return out
+    
+    def rotate(self, point, angle):
+        A_,B_=rotate(self.A, point, angle), rotate(self.B, point, angle)
+        return Ray(A_, B_)
 
 
 class Polygon(GObject):
