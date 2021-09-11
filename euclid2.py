@@ -69,7 +69,7 @@ def intersection_line_line(line1,line2):
     if not (line1 | line2):
         A=line2.A-line1.A
         T=system(V, A)
-        print(T)
+        #print(T)
         t1=T[0,0]
         out=line1(t1)
     else:
@@ -80,7 +80,7 @@ def intersection_line_line(line1,line2):
 
 def intersection_line_segment(line,segment):
     int_=intersection_line_line(line, segment.line)
-    if int_!=None:
+    if not isnone(int_):
         out=int_ if (int_ in segment) else None
     else:
         out=None
@@ -88,7 +88,7 @@ def intersection_line_segment(line,segment):
 
 def intersection_segment_segment(segment1,segment2):
     int_=intersection_line_line(segment1.line, segment2.line)
-    if int_!=None:
+    if not isnone(int_):
         out=int_ if (int_ in segment1) and (int_ in segment2) else None
     else:
         out=None
@@ -127,19 +127,22 @@ class Line(GObject):
     def inv(self,P):
         Ax,Ay=row_vector(self.A)
         vx,vy=row_vector(self.v)
-        Px,Py=rndv(row_vector(P))
+        Px,Py=row_vector(P)
 
         if (not isclose(vx,0)) and (not isclose(vy,0)):
             t1=(Px-Ax)/vx
             t2=(Py-Ay)/vy
         elif (isclose(vx,0)):
             t2=(Py-Ay)/vy
-            t1=t2 if (Px==Ax) else None
+            t1=t2 if isclose(Px,Ax) else None
         elif (isclose(vy,0)):
             t1=(Px-Ax)/vx
-            t2=t1 if (Py==Ay) else None
+            t2=t1 if isclose(Py,Ay) else None
 
-        out=t1 if t1==t2 else None
+        if not (isnone(t1) or isnone(t2)):
+            out=t1 if isclose(t1,t2) else None
+        else:
+            out=None
         return out
 
     def __add__(self,vector):
