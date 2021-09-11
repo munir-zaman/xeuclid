@@ -4,8 +4,8 @@ import numpy as np
 def isnone(obj):
     return str(type(obj))=="<class 'NoneType'>"
 
-round_val=7
-abs_tol=10**-6
+round_val=8
+abs_tol=10**-7
 
 isclose=lambda a,b: mth.isclose(a,b,abs_tol=abs_tol,rel_tol=0)
 rnd=lambda x: round(x,round_val) if not isnone(x) else None
