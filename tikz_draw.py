@@ -26,7 +26,8 @@ def_editor="vim"
 pdflatex_command='pdflatex -shell-escape'
 
 def_vector_config="blue, thick"
-
+def_grid_config="cyan"
+def_point_config="fill=cyan!20!black, draw=black"
 
 class Tikz():
     def __init__(self,file_name, preamble=def_preamble):
@@ -76,6 +77,18 @@ class Tikz():
         #TODO
         code=axis_code+axis_ticks_code
         self.write(code)
+
+    def draw_grid(self, xy_range=[-5,5],config=def_grid_config):
+        xmin, xmax=xy_range
+        Config=f"[{def_grid_config}]" if def_grid_config!=None or def_grid_config!='' else ""
+        grid_code=f"\\draw{Config} {str((xmin,xmax))} grid {str((xmax,xmin))};"
+        self.write(grid_code)
+
+    def draw_point(self, point, config=def_point_config, radius=2):
+        X,Y=row_vector(point)
+        Config=f"[{config}]" if (config!=None or config!='') else ""
+        draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius}pt);"
+        self.write(draw_point_code)
 
     def draw_vector(self,vector,start=(0,0), config=def_vector_config):
         X,Y=row_vector(vector)
