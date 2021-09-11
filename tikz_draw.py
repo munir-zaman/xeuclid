@@ -29,6 +29,7 @@ def_vector_config="blue, thick"
 def_grid_config="cyan"
 def_point_config="fill=cyan!20!black, draw=black"
 def_path_config="black, thick"
+def_line_config="black, thick"
 
 
 class Tikz():
@@ -62,6 +63,10 @@ class Tikz():
 
     def pdf(self):
         os.system(f'{pdflatex_command} {self.file_name}')
+
+    def clip(self, min_val, max_val):
+        clip_code=f"\\clip {str((min_val,max_val))} rectangle {str((max_val,min_val))};"
+        self.write(clip_code)
 
     def draw_axis(self,xy_range=[-5,5],tick_labels=False):
         axis_code=f"""
@@ -102,16 +107,29 @@ class Tikz():
     """
         self.write(code)
 
-    def draw_path(self,*points, config=def_path_config):
+    def draw_path(self,*points, config=def_path_config, cycle=False):
         points_xy=[(p[0,0], p[1,0]) for p in points]
         path_string=""
+
         for i in range(0,len(points_xy)-1):
             path_string=path_string+f"{str(points_xy[i])} -- "
-        path_string=path_string+f"{str(points_xy[-1])};"
+
+        path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;" 
+
         Config=f"[{config}]" if (config!=None or config!='') else ""
 
         draw_path_code=f"\\draw{Config}  "+path_string
         self.write(draw_path_code)
 
+    def draw_points(self, *points, config=def_point_config, radius=2):
+        for point in points:
+            self.draw_point(point, config=config, radius=radius)
+
+    def draw_line(self, line, config=def_line_config, t_range=[-10,10]):
+        A=line(t_range[0])
+        B=line(t_range[1])
+        Config=f"[{config},<->]" if (config!=None or config!='') else "[<->]"
+        
+        self.draw_path(A,B, config=Config, cycle=False)
 
 
