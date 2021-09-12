@@ -84,4 +84,9 @@ vectorize=lambda func: np.vectorize(func)
 
 strv=np.vectorize(str)
 
-
+def norm(vector):
+    vx,vy=row_vector(vector)
+    r=mth.sqrt(vx**2+ vy**2)
+    Vx,Vy=vx/r, vy/r
+    V=col_vector([Vx, Vy])
+    return V
