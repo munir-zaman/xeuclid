@@ -30,8 +30,8 @@ def_grid_config="cyan"
 def_point_config="fill=cyan!20!black, draw=black"
 def_path_config="black, thick"
 def_line_config="black, thick"
-def_arc_fill_config="pink"
-def_arc_config="<->"
+def_arc_fill_config="red, opacity=0.3"
+def_arc_config=""
 
 
 class Tikz():
