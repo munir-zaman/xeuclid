@@ -1,9 +1,11 @@
 `euclid` is little project of mine that I've been working on for the past few weeks. It's a set of python scripts 
-that lets you do analytic geometry in `python`. You can also draw TikZ diagrams using `tikz_draw.py`. It's a work in progress and 
-therefore it can't do much. So far it can only handle `Line`, `Segment` and `Ray`. 
+that lets you do analytic geometry in `python`. You can also draw TikZ diagrams using `tikz_draw.py`. 
+**It's a work in progress and therefore it can't do much.**
+So far it can only handle `Line`, `Segment` and `Ray`. 
 (Geometric objects are defined using *parametric equations*.)
 
 # Example Usage
+
 ```python
 from euclid2 import *
 from tikz_draw import *
@@ -45,5 +47,7 @@ tikz.end('document')
 tikz.pdf() 
 #This will compile the TeX file using pdfLaTeX
 ```
+
 *Output: *
+
 ![Output](doc/triangle.png)
