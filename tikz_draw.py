@@ -32,6 +32,8 @@ def_path_config="black, thick"
 def_line_config="black, thick"
 def_arc_fill_config="red, opacity=0.3"
 def_arc_config=""
+def_node_draw_config=""
+def_node_config="anchor=north"
 
 
 class Tikz():
@@ -152,6 +154,13 @@ class Tikz():
         self.write(fill_angle_code)
         self.write(draw_angle_code)
 
-
+    def node(self, position, node_config=def_node_config , config=def_node_draw_config, text=""):
+        X,Y=row_vector(position)
         
+        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        node_Config=f"[{node_config}]" if (not isnone(node_config) and node_config!="") else ""
+        
+        node_code=f"\\draw{Config} {X,Y} node {node_Config} "+"{"+f"{text}"+"};"
+        
+        self.write(node_code)
 
