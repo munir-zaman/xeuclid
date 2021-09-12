@@ -41,13 +41,19 @@ tikz.draw_path(I,C)
 
 tikz.draw_points(A,B,C,I)
 
+tikz.node(A, node_config="anchor=west",text=r"$A$")
+tikz.node(B, node_config="anchor=south",text=r"$B$")
+tikz.node(C, node_config="anchor=east",text=r"$C$")
+tikz.node(I, node_config="anchor=north",text=r"$I$")
+
 tikz.end('tikzpicture')
 tikz.end('document')
 
-tikz.pdf() 
+tikz.pdf()
 #This will compile the TeX file using pdfLaTeX
 ```
 
-*Output: *
+**Output:**
 
 ![Output](doc/triangle.png)
+
