@@ -73,7 +73,7 @@ def intersection_line_line(line1,line2):
         t1=T[0,0]
         out=line1(t1)
     else:
-        print("The Lines are Parallel. Returned None")
+        #print("The Lines are Parallel. Returned None")
         out=None
 
     return out
@@ -131,14 +131,7 @@ class Line(GObject):
             print('WARNING V=[0,0]')
 
     def __call__(self,t):
-        """ evaluates l(t)= A+ v*t
-            input(s):
-                t: type= float or int
-            output(s):
-                P: type= np.array([[Px],
-                                   [Py]])
-         """
-        return rndv(self.A+self.v*t)
+        return (self.A+self.v*t)
 
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t"
@@ -247,6 +240,20 @@ class Line(GObject):
         theta=angle_between_vectors(v1, v2)%180
         return round(theta,8)
 
+    def distance(self, obj):
+        out=None
+        if isinstance(obj, np.ndarray):
+            perp_line=self.perpendicular_line(obj)
+            A=self.intersection(perp_line)
+            out=dist(A, obj)
+
+        elif isinstance(obj, Line) and (obj | self):
+            perp_line = self.perpendicular_line(obj.A)
+            A=self.intersection(perp_line)
+            out=dist(A, obj.A)
+
+        return out
+
 
 def param_to_impl_line(line):
     Ax,Ay=row_vector(line.A)
@@ -275,10 +282,10 @@ x_axis=Line(zero_vect,x_vect)
 def collinear(*points):
     """ collinear(*points)
 
-        checks if the given set of points are collinear 
-        If,the given set of points are collinear: 
-            returns the line through the given set of points. 
-        Else, 
+        checks if the given set of points are collinear
+        If,the given set of points are collinear:
+            returns the line through the given set of points.
+        Else,
             returns None
     """
     A,B=points[0],points[1]
@@ -335,8 +342,11 @@ class Segment(GObject):
         self.type="segment"
         self.line=Line(self.A, self.B)
 
+        self.mid=mid(self.A, self.B)
+        self.dist=dist(self.A, self.B)
+
     def __call__(self, t):
-        return rndv(self.A+ self.v*t)
+        return (self.A+ self.v*t)
 
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t in [0, 1]"
@@ -392,6 +402,7 @@ class Segment(GObject):
     def rotate(self, point, angle):
         A_, B_= rotate(self.A, point, angle), rotate(self.B, point, angle)
         return Segment(A_, B_)
+
 
 
 class Ray(GObject):
@@ -455,7 +466,7 @@ class Ray(GObject):
             out=None
 
         return out
-    
+
     def rotate(self, point, angle):
         A_,B_=rotate(self.A, point, angle), rotate(self.B, point, angle)
         return Ray(A_, B_)
@@ -466,37 +477,44 @@ class Polygon(GObject):
     def __init__(self,*vertices):
 
         self.vertices=list(vertices)
-        self.area=self.area()
-        self.obj_type="Polygon"
+        self.type="polygon"
 
     def area(self):
+        V=self.vertices[::]
+        V.append(self.vertices[0])
+        return (0.5)*sum([ np.linalg.det(np.array([[V[i][0,0], V[i+1][0,0]],
+                                                   [V[i][1,0], V[i+1][1,0]]])) for i in range(len(V)-1) ])
 
-        vertices=self.vertices[::]
-        vertices.append(self.vertices[0])
+    def rotate(self, point, angle):
+        vertices=[rotate(p, point, angle) for p in self.vertices]
+        return Polygon(vertices)
 
-        V=[[vertices[p],vertices[p+1]] for p in range(0,len(vertices)-1)]
 
-        Det=lambda l: l[0][0]*l[1][1]-l[1][0]*l[0][1]
-        Area=abs(sum([Det(l) for l in V]))/2
+class Circle(GObject):
 
-        return Area
+    def __init__(self, center, radius):
+        self.center=center
+        self.radius=radius
+        self.type="circle"
 
-    def shift(self,*dv):
-        if len(dv)==1:
-            dv=dv[0]
+    def __repr__(self):
+        return f"[{self.center[0,0]}, {self.center[1,0]}] + [cos(x), sin(x)]* {self.radius}"
 
-        vertices_=[]
+    def __call__(self, theta):
+        return self.center+ self.radius* np.array([[cos(theta)], [sin(theta)]])
 
-        for p in self.vertices:
-            vertices_.append(list(array(p)+array(dv)))
+    def __contains__(self, point):
+        Px, Py=row_vector(point - self.center)
+        r=self.radius
+        return isclose( (Px)**2 + (Py)**2 , r**2 )
 
-        return Polygon(*vertices_)
+    def inv(self, point):
+        out=None
+        if point in self:
+            Px, Py = row_vector(point - self.center)
+            out=atan2(Px, Py)
+        return out
 
-    def rotate(self,point,angle):
-        func=lambda x,y: Point([x,y]).rotate(point,angle)
-        poly=apply_transformation(self, func)
-        return poly
 
-    def get_unique_points(self):
-        return self.vertices[::]
+
 
