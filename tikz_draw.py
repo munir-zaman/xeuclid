@@ -19,13 +19,16 @@ def_preamble="""%tikz_draw
 \\usepackage{amssymb}
 \\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 \\usepackage{tikz}
+%tikzlibrary
+\\usetikzlibrary{arrows.meta}
 %preamble
+
 """
 
 def_editor="vim"
 pdflatex_command='pdflatex -shell-escape'
 
-def_vector_config="blue, thick"
+def_vector_config="blue, thick, -Stealth"
 def_grid_config="cyan"
 def_point_config="fill=cyan!20!black, draw=black"
 def_path_config="black, thick"
@@ -34,6 +37,7 @@ def_arc_fill_config="red, opacity=0.3"
 def_arc_config=""
 def_node_draw_config=""
 def_node_config="anchor=north"
+def_circle_config="blue"
 
 
 class Tikz():
@@ -76,8 +80,8 @@ class Tikz():
     def draw_axis(self,xy_range=[-5,5],tick_labels=False):
         axis_code=f"""
     %axis
-    \\draw[<->] ({xy_range[0]},0) -- ({xy_range[1]},0);
-    \\draw[<->] (0, {xy_range[0]}) -- (0, {xy_range[1]});\n"""
+    \\draw[Stealth-Stealth] ({xy_range[0]},0) -- ({xy_range[1]},0);
+    \\draw[Stealth-Stealth] (0, {xy_range[0]}) -- (0, {xy_range[1]});\n"""
 
         axis_ticks_code="""
     %axis ticks
@@ -126,6 +130,20 @@ class Tikz():
         draw_path_code=f"\\draw{Config}  "+path_string
         self.write(draw_path_code)
 
+    def fill_path(self, *poinys, fill_config=def_path_fill_config, cycle=False):
+        points_xy=[(p[0,0], p[1,0]) for p in points]
+        path_string=""
+
+        for i in range(0,len(points_xy)-1):
+            path_string=path_string+f"{str(points_xy[i])} -- "
+
+        path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;" 
+
+        Config=f"[{config}]" if (not isnone(fill_config) and fill_config!="") else ""
+
+        draw_path_code=f"\\fill{Config}  "+path_string
+        self.write(draw_path_code)        
+
     def draw_points(self, *points, config=def_point_config, radius=2):
         for point in points:
             self.draw_point(point, config=config, radius=radius)
@@ -153,6 +171,13 @@ class Tikz():
         
         self.write(fill_angle_code)
         self.write(draw_angle_code)
+
+    def draw_circle(self, center, radius, config=def_circle_config):
+        Cx, Cy=row_vector(center)
+        draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+
+        draw_circle_code=f"\\draw{draw_Config} ({Cx}, {Cy}) circle ({radius});"
+        self.write(draw_circle_code)
 
     def node(self, position, node_config=def_node_config , config=def_node_draw_config, text=""):
         X,Y=row_vector(position)
