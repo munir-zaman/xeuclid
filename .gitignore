@@ -5,6 +5,6 @@
 *.gz
 *.fls
 *.fdb_latexmk
-__pycahce__/
+__pycache__/
 old/
 doc/.ipynb_checkpoints/
