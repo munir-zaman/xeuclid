@@ -270,7 +270,7 @@ def dist(p1,p2):
 
 def mid(p1,p2):
     """ Return midpoint of p1 and p2 """
-    return Point([(p1[0,0]+p2[0,0])/2,(p1[1,0]+p2[1,0])/2])
+    return col_vector([(p1[0,0]+p2[0,0])/2,(p1[1,0]+p2[1,0])/2])
 
 
 x_vect=np.array([[1],[0]])
