@@ -28,6 +28,12 @@ atan=lambda a: mth.degrees(mth.atan(a))%180
 
 atan2=lambda x,y: mth.degrees(mth.atan2(y,x))
 
+def get_rid_of_multiple_points(l):
+    L=l.copy()
+    L_=set([tuple(row_vector(point)) for point in L])
+    out=[col_vector(p) for p in L_]
+
+    return out
 
 def system2(A1,A2):
     """ returns the solution to the following system of linear equations,
