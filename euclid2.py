@@ -492,24 +492,56 @@ class Polygon(GObject):
 
 
 def intersection_line_circle(line, circle):
-    out=None
+    if rnd(line.distance(circle.center)) < circle.radius:
+        dx, dy= row_vector(circle.center - line.A)
+        vx, vy= row_vector(line.v)
+        r= circle.radius
+        V=sqrt(vx**2 + vy**2)
+
+        a=(r**2)*(V**2)
+        b=2*vy*r*(vy*dx - vx*dy)
+        c=(vy*dx - vx*dy)**2 - (vx**2)*(r**2)
+
+        u=quad(a, b, c)
+
+        t=[acos(x) for x in u] + [-acos(x) for x in u]
+
+        out=[rndv(circle(theta)) for theta in t if (circle(theta) in line)]
+
+    elif isclose(rnd(line.distance(circle.center)), circle.radius):
+        out= [line.perpendicular_line(circle.center) & line]
+
+    else:
+        out=[]
+
+    return get_rid_of_multiple_points(out)
     
-    dx, dy= row_vector(circle.center - line.A)
-    vx, vy= row_vector(line.v)
-    r= circle.radius
-    V=sqrt(vx**2 + vy**2)
-
-    a=(r**2)*(V**2)
-    b=2*vy*r*(vy*dx - vx*dy)
-    c=(vy*dx - vx*dy)**2 - (vx**2)*(r**2)
-
-    u=quad(a, b, c)
-    t=[acos(x) for x in u]
-
-    out=[circle(theta) for theta in t]
-
+def intersection_segment_circle(segment, circle):
+    int_=intersection_line_circle(segment.line, circle)
+    out=[point for point in int_ if (point in segment)]
     return out
 
+def intersection_ray_circle(ray, circle):
+    int_=intersection_line_circle(ray.line, circle)
+    out=[point for point in int_ if (point in ray)]
+    return out
+
+def intersection_circle_circle(circle1, circle2): #what if the center is inside the other
+    d=dist(circle1.center, circle2.center)
+    r1,r2= circle1.radius, circle2.radius
+    
+    if isclose(d, r1+r2):
+        ray=Ray(circle1.center, circle2.center)
+        out=[intersection_ray_circle(ray, circle1)]
+    elif rnd(d) < r1+r2:
+        theta= acos((r1**2 + d**2 - r2**2)/(2*r1*d))
+        s1=Segment(circle1.center, rotate(circle2.center, circle1.center, theta))
+        s2=Segment(circle1.center, rotate(circle2.center, circle1.center, -theta))
+        out=intersection_segment_circle(s1, circle1) + intersection_segment_circle(s2, circle1)
+    else:
+        out=[]
+
+    return out
 
 
 class Circle(GObject):
@@ -546,7 +578,7 @@ class Circle(GObject):
             line=Line(point, self.center)
             perp_line=line.perpendicular_line(point)
             out=perp_line
-        elif self.power(point) < 0:
+        elif rnd(self.power(point)) < 0:
             #f.p.a
             out=None
         else:
