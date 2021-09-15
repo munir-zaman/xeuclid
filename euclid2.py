@@ -490,6 +490,28 @@ class Polygon(GObject):
         return Polygon(vertices)
 
 
+
+def intersection_line_circle(line, circle):
+    out=None
+    
+    dx, dy= row_vector(circle.center - line.A)
+    vx, vy= row_vector(line.v)
+    r= circle.radius
+    V=sqrt(vx**2 + vy**2)
+
+    a=(r**2)*(V**2)
+    b=2*vy*r*(vy*dx - vx*dy)
+    c=(vy*dx - vx*dy)**2 - (vx**2)*(r**2)
+
+    u=quad(a, b, c)
+    t=[acos(x) for x in u]
+
+    out=[circle(theta) for theta in t]
+
+    return out
+
+
+
 class Circle(GObject):
 
     def __init__(self, center, radius):
@@ -515,6 +537,22 @@ class Circle(GObject):
             out=atan2(Px, Py)
         return out
 
+    def power(self, point):
+        return dist(point, self.center)**2 - self.radius**2
+
+    def tangent(self, point):
+        out=None
+        if point in self:
+            line=Line(point, self.center)
+            perp_line=line.perpendicular_line(point)
+            out=perp_line
+        elif self.power(point) < 0:
+            #f.p.a
+            out=None
+        else:
+            #TODO
+            out=None
+        return out
 
 
 def points_to_circle(point1, point2, point3):
@@ -531,4 +569,5 @@ def points_to_circle(point1, point2, point3):
     radius=dist(center, p1)
 
     return Circle(center, radius)
+
 
