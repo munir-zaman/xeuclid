@@ -53,11 +53,12 @@ in_interval=lambda x,a,b: (a <= x) and (x <= b)
 
 def quad(a,b,c):
     d=b**2-4*a*c
-    if b >= 0:
-        out=[(-b+d)/2*a,(-b-d)/2*a]
+    if d > 0:
+        out=[(-b+d**(1/2))/(2*a),(-b-d**(1/2))/(2*a)]
+    elif d==0:
+        out=[(-b)/(2*a)]
     else:
-        print("solution does not exist in R")
-        out=None
+        out=[]
     return out
 
 col_vector=lambda A: np.reshape(A,(len(A),1))
@@ -91,3 +92,4 @@ def norm(vector):
     Vx,Vy=vx/r, vy/r
     V=col_vector([Vx, Vy])
     return V
+
