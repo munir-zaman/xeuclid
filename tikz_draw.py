@@ -28,8 +28,10 @@ def_preamble="""%tikz_draw
 def_editor="vim"
 pdflatex_command='pdflatex -shell-escape'
 
-def_vector_config="blue, thick, -Stealth"
+def_vector_config="black, thick"
+def_arrow_tip="-Stealth"
 def_grid_config="gray, opacity=0.75, dashed"
+def_axis_arrow_tip="Stealth-Stealth"
 def_point_config="fill=cyan!20!black, draw=black"
 def_path_config="black, thick"
 def_path_fill_config="cyan, opacity=0.3"
@@ -38,7 +40,8 @@ def_arc_fill_config="cyan, opacity=0.3"
 def_arc_config=""
 def_node_draw_config=""
 def_node_config="anchor=north"
-def_circle_config="blue"
+def_circle_config="cyan!20!black"
+
 
 
 class Tikz():
@@ -74,31 +77,40 @@ class Tikz():
     def pdf(self):
         os.system(f'{pdflatex_command} {self.file_name}')
 
-    def clip(self, min_val, max_val):
-        clip_code=f"\\clip {str((min_val,max_val))} rectangle {str((max_val,min_val))};"
+    def clip(self, x_range=[-5,5], y_range=[-5,5]):
+        xmin,xmax=x_range
+        ymin,ymax=y_range
+        clip_code=f"\\clip {str((xmin, ymin))} rectangle {str((xmax, ymax))};"
         self.write(clip_code)
 
-    def draw_axis(self,xy_range=[-5,5],tick_labels=False):
+    def draw_axis(self, x_range=[-5,5], y_range=[-5,5], arrow_tip=def_axis_arrow_tip ,tick_labels=False):
+        xmin,xmax=x_range
+        ymin,ymax=y_range
+
+        Tip=f"[{arrow_tip}]" if (not isnone(arrow_tip) and arrow_tip!="") else ""
+
         axis_code=f"""
     %axis
-    \\draw[Stealth-Stealth] ({xy_range[0]},0) -- ({xy_range[1]},0);
-    \\draw[Stealth-Stealth] (0, {xy_range[0]}) -- (0, {xy_range[1]});\n"""
+    \\draw{Tip} ({xmin},0) -- ({xmax},0);
+    \\draw{Tip} (0, {ymin}) -- (0, {ymax});\n"""
 
         axis_ticks_code="""
     %axis ticks
-    \\foreach \\x in {"""+f"""{xy_range[0]+1},{xy_range[0]+2},...,{xy_range[1]-2},{xy_range[1]-1}"""+"""}
+    \\foreach \\x in {"""+f"""{xmin+1},...,{xmax-1}"""+"""}
         \\draw (\\x,-2pt) -- (\\x,2pt);\n""" + """%\n
-    \\foreach \\x in {"""+f"""{xy_range[0]+1},{xy_range[0]+2},...,{xy_range[1]-2},{xy_range[1]-1}"""+"""}
+    \\foreach \\x in {"""+f"""{ymin+1},...,{ymax-1}"""+"""}
         \\draw (-2pt,\\x) -- (2pt,\\x);\n"""
 
         #TODO
         code=axis_code+axis_ticks_code
         self.write(code)
 
-    def draw_grid(self, xy_range=[-5,5],config=def_grid_config):
-        xmin, xmax=xy_range
+    def draw_grid(self, x_range=[-5,5], y_range=[-5,5], config=def_grid_config):
+        xmin,xmax=x_range
+        ymin,ymax=y_range
+
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
-        grid_code=f"\\draw{Config} {str((xmin,xmax))} grid {str((xmax,xmin))};"
+        grid_code=f"\\draw{Config} {str((xmin,ymin))} grid {str((xmax,ymax))};"
         self.write(grid_code)
 
     def draw_point(self, point, config=def_point_config, radius=2):
@@ -107,10 +119,10 @@ class Tikz():
         draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius}pt);"
         self.write(draw_point_code)
 
-    def draw_vector(self,vector,start=origin, config=def_vector_config):
+    def draw_vector(self,vector,start=origin, config=def_vector_config, arrow_tip=def_arrow_tip):
         X,Y=row_vector(vector)
 
-        Config=f"[{config},-Stealth]" if (not isnone(config) and config!="") else "[-Stealth]"
+        Config=f"[{config},{arrow_tip}]" if (not isnone(config) and config!="") else f"[{Tip}]"
         code=f"""
     %vector [{X}, {Y}]
     \\draw{Config} {(start[0,0], start[1,0])} -- {str((X,Y))};
