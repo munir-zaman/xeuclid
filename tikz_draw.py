@@ -35,7 +35,7 @@ def_axis_arrow_tip="Stealth-Stealth"
 def_point_config="fill=cyan!20!black, draw=black"
 def_path_config="black, thick"
 def_path_fill_config="cyan, opacity=0.3"
-def_line_config="black, thick"
+def_line_config="black, thick, Stealth-Stealth"
 def_arc_fill_config="cyan, opacity=0.3"
 def_arc_config=""
 def_node_draw_config=""
@@ -162,12 +162,51 @@ class Tikz():
         for point in points:
             self.draw_point(point, config=config, radius=radius)
 
-    def draw_line(self, line, config=def_line_config, t_range=[-10,10]):
-        A=line(t_range[0])
-        B=line(t_range[1])
-        Config=f"[{config},<->]" if (not isnone(config) and config!="") else "[<->]"
+    def draw_line(self, line, config=def_line_config, x_range=[-5,5], y_range=[-5, 5]):
+        xmin, xmax=x_range
+        ymin, ymax=y_range
         
-        self.draw_path(A,B, config=Config, cycle=False)
+        A=col_vector([xmin, ymin])
+        B=col_vector([xmax, ymin])
+        C=col_vector([xmax, ymax])
+        D=col_vector([xmin, ymax])
+
+        up=Line(C, D)
+        right=Line(C, B)
+
+        down=Line(A, B)
+        left=Line(A, D)
+
+        int1=[line.intersection(down), line.intersection(left)]
+        int2=[line.intersection(up), line.intersection(right)]
+        
+        print(int1)
+        print(int2)
+
+        in_range=lambda p: (xmin <= p[0,0] <= xmax) and (ymin <= p[1,0] <= ymax) if not isnone(p) else False
+        #might cause trouble due to limitations of floating point arithmetic
+
+        int1_=[p for p in int1 if in_range(p)]
+        int2_=[q for q in int2 if in_range(q)]
+
+        if len(int1_)==len(int2_):
+            p1=int1_[0]
+            p2=int2_[0]
+        elif len(int1_)==2 and int2_==0:
+            p1,p2=int1_
+        elif len(int1_)==0 and len(int2_)==2:
+            p1,p2=int2_
+        else:
+            p1=int1_[0]
+            p2=int2_[0]
+        
+        p1=tuple(row_vector(p1))
+        p2=tuple(row_vector(p2))
+
+        draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        line_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
+
+        self.write(line_draw_code)
 
     def draw_angle(self, A, B, C, config=def_arc_config, radius=1, fill_config=def_arc_fill_config):
         
