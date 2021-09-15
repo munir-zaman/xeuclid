@@ -343,7 +343,7 @@ class Segment(GObject):
         self.line=Line(self.A, self.B)
 
         self.mid=mid(self.A, self.B)
-        self.dist=dist(self.A, self.B)
+        self.length=dist(self.A, self.B)
 
     def __call__(self, t):
         return (self.A+ self.v*t)
@@ -517,4 +517,18 @@ class Circle(GObject):
 
 
 
+def points_to_circle(point1, point2, point3):
+    p1, p2, p2= point1, point2, point3
+    p1p2=Segment(p1, p2)
+    p1p3=Segment(p1, p3)
+    p1p2mid=p1p2.mid
+    p1p3mid=p1p3.mid
+
+    p1p2_perp=p1p2.line.perpendicular_line(p1p2mid)
+    p1p3_perp=p1p3.line.perpendicular_line(p1p3mid)
+    
+    center=p1p2_perp & p1p3_perp
+    radius=dist(center, p1)
+
+    return Circle(center, radius)
 
