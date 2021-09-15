@@ -526,22 +526,16 @@ def intersection_ray_circle(ray, circle):
     out=[point for point in int_ if (point in ray)]
     return out
 
-def intersection_circle_circle(circle1, circle2): #what if the center is inside the other
+def intersection_circle_circle(circle1, circle2):
     d=dist(circle1.center, circle2.center)
     r1,r2= circle1.radius, circle2.radius
     
-    if isclose(d, r1+r2):
-        ray=Ray(circle1.center, circle2.center)
-        out=[intersection_ray_circle(ray, circle1)]
-    elif rnd(d) < r1+r2:
-        theta= acos((r1**2 + d**2 - r2**2)/(2*r1*d))
-        s1=Segment(circle1.center, rotate(circle2.center, circle1.center, theta))
-        s2=Segment(circle1.center, rotate(circle2.center, circle1.center, -theta))
-        out=intersection_segment_circle(s1, circle1) + intersection_segment_circle(s2, circle1)
-    else:
-        out=[]
+    theta= acos((r1**2 + d**2 - r2**2)/(2*r1*d))
+    s1=Ray(circle1.center, rotate(circle2.center, circle1.center, theta))
+    s2=Ray(circle1.center, rotate(circle2.center, circle1.center, -theta))
+    out=intersection_segment_circle(s1, circle1) + intersection_segment_circle(s2, circle1)
 
-    return out
+    return get_rid_of_multiple_points(out)
 
 
 class Circle(GObject):
