@@ -29,12 +29,12 @@ def_editor="vim"
 pdflatex_command='pdflatex -shell-escape'
 
 def_vector_config="blue, thick, -Stealth"
-def_grid_config="cyan"
+def_grid_config="gray, opacity=0.75, dashed"
 def_point_config="fill=cyan!20!black, draw=black"
 def_path_config="black, thick"
 def_path_fill_config="cyan, opacity=0.3"
 def_line_config="black, thick"
-def_arc_fill_config="red, opacity=0.3"
+def_arc_fill_config="cyan, opacity=0.3"
 def_arc_config=""
 def_node_draw_config=""
 def_node_config="anchor=north"
@@ -97,7 +97,7 @@ class Tikz():
 
     def draw_grid(self, xy_range=[-5,5],config=def_grid_config):
         xmin, xmax=xy_range
-        Config=f"[{def_grid_config}]" if (not isnone(config) and config!="") else ""
+        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         grid_code=f"\\draw{Config} {str((xmin,xmax))} grid {str((xmax,xmin))};"
         self.write(grid_code)
 
@@ -107,14 +107,15 @@ class Tikz():
         draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius}pt);"
         self.write(draw_point_code)
 
-    def draw_vector(self,vector,start=(0,0), config=def_vector_config):
+    def draw_vector(self,vector,start=origin, config=def_vector_config):
         X,Y=row_vector(vector)
 
-        Config=f"[{config},->]" if (not isnone(config) and config!="") else "[->]"
+        Config=f"[{config},-Stealth]" if (not isnone(config) and config!="") else "[-Stealth]"
         code=f"""
     %vector [{X}, {Y}]
-    \\draw{Config} {str(tuple(start))} -- {str((X,Y))};
+    \\draw{Config} {(start[0,0], start[1,0])} -- {str((X,Y))};
     """
+    
         self.write(code)
 
     def draw_path(self,*points, config=def_path_config, cycle=False):
