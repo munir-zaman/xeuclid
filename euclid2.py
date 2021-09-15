@@ -518,7 +518,7 @@ class Circle(GObject):
 
 
 def points_to_circle(point1, point2, point3):
-    p1, p2, p2= point1, point2, point3
+    p1, p2, p3= point1, point2, point3
     p1p2=Segment(p1, p2)
     p1p3=Segment(p1, p3)
     p1p2mid=p1p2.mid
