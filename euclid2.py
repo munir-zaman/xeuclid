@@ -582,6 +582,29 @@ class Circle(GObject):
         return out
 
 
+def common_tangents(circle1 ,circle2):
+    if circle1.radius==circle2.radius:
+        out=[]
+    else:
+        if circle2.radius > circle1.radius:
+            c2=circle2
+            c1=circle1
+        else:
+            c2=circle1
+            c1=circle2
+
+        r2=c2.radius
+        r1=c1.radius
+        d=dist(c1.center, c2.center)
+
+        b1=((r1)/(r2-r1))* d
+        c1c2=c1.center - c2.center
+        x_angle=angle_between_vectors(x_vect, c1c2)
+        P=polar(b1, x_angle, center=c1.center)
+
+        out=c1.tangent(P)
+    return out
+
 def points_to_circle(point1, point2, point3):
     p1, p2, p3= point1, point2, point3
     p1p2=Segment(p1, p2)
