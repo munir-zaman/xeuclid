@@ -567,17 +567,18 @@ class Circle(GObject):
         return dist(point, self.center)**2 - self.radius**2
 
     def tangent(self, point):
-        out=None
+        out=[]
         if point in self:
             line=Line(point, self.center)
             perp_line=line.perpendicular_line(point)
             out=perp_line
         elif rnd(self.power(point)) < 0:
-            #f.p.a
-            out=None
+            out=[]
         else:
-            #TODO
-            out=None
+            ABmid=mid(self.center, point)
+            Circ=Circle(ABmid, dist(ABmid, self.center))
+            int_=intersection_circle_circle(self, Circ)
+            out=[Line(point, q) for q in int_]
         return out
 
 
