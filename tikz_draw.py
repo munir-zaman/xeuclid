@@ -29,6 +29,7 @@ def_editor="vim"
 pdflatex_command='pdflatex -shell-escape'
 
 def_vector_config="black, thick"
+def_ray_config="black , thick, -Stealth"
 def_arrow_tip="-Stealth"
 def_grid_config="gray, opacity=0.75, dashed"
 def_axis_arrow_tip="Stealth-Stealth"
@@ -179,9 +180,6 @@ class Tikz():
 
         int1=[line.intersection(down), line.intersection(left)]
         int2=[line.intersection(up), line.intersection(right)]
-        
-        print(int1)
-        print(int2)
 
         in_range=lambda p: (xmin <= p[0,0] <= xmax) and (ymin <= p[1,0] <= ymax) if not isnone(p) else False
         #might cause trouble due to limitations of floating point arithmetic
@@ -199,14 +197,48 @@ class Tikz():
         else:
             p1=int1_[0]
             p2=int2_[0]
-        
+
         p1=tuple(row_vector(p1))
         p2=tuple(row_vector(p2))
-
+        
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         line_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(line_draw_code)
+
+    def draw_ray(self, ray, config=def_ray_config, x_range=[-5,5], y_range=[-5, 5]):
+        #ray.A cannot be outside given x y range
+        xmin, xmax=x_range
+        ymin, ymax=y_range
+        
+        A=col_vector([xmin, ymin])
+        B=col_vector([xmax, ymin])
+        C=col_vector([xmax, ymax])
+        D=col_vector([xmin, ymax])
+
+        up=Line(C, D)
+        right=Line(C, B)
+
+        down=Line(A, B)
+        left=Line(A, D)
+
+        int1=[ray.intersection(down), ray.intersection(left)]
+        int2=[ray.intersection(up), ray.intersection(right)]
+
+        in_range=lambda p: (xmin <= p[0,0] <= xmax) and (ymin <= p[1,0] <= ymax) if not isnone(p) else False
+
+        int1_=[p for p in int1 if in_range(p)]
+        int2_=[q for q in int2 if in_range(q)]
+
+        P = int1_[0] if len(int1_)!=0 else int2_[0]
+
+        p1=tuple(row_vector(ray.A))
+        p2=tuple(row_vector(P))
+
+        draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        ray_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
+
+        self.write(ray_draw_code)
 
     def draw_angle(self, A, B, C, config=def_arc_config, radius=1, fill_config=def_arc_fill_config):
         
