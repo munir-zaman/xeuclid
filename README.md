@@ -1,7 +1,6 @@
 `euclid` is little project of mine that I've been working on for the past few weeks. It's a set of python scripts 
 that lets you do analytic geometry in `python`. You can also draw TikZ diagrams using `tikz_draw.py`. 
-**It's a work in progress and therefore it can't do much.**
-So far it can only handle `Line`, `Segment` and `Ray`. 
+**It's a work in progress and therefore it can't do much.** 
 (Geometric objects are defined using *parametric equations*.)
 
 # Example Usage
@@ -27,8 +26,8 @@ tikz=Tikz('triangle.tex')
 tikz.begin('document')
 tikz.begin('tikzpicture')
 
-tikz.draw_grid(xy_range=[-5,5])
-tikz.draw_axis()
+tikz.draw_grid(x_range=[-5,5], y_range=[-5,5])
+tikz.draw_axis(x_range=[-5,5], y_range=[-5,5])
 
 tikz.draw_angle(A,C,B, radius=0.3)
 tikz.draw_angle(A,B,C, radius=0.3)
@@ -55,5 +54,5 @@ tikz.pdf()
 
 **Output:**
 
-![Output](doc/triangle.png)
+![Output](doc/example_usage_files/triangle.png)
 

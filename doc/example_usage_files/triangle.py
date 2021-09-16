@@ -18,8 +18,8 @@ tikz=Tikz('triangle.tex')
 tikz.begin('document')
 tikz.begin('tikzpicture')
 
-tikz.draw_grid(xy_range=[-5,5])
-tikz.draw_axis()
+tikz.draw_grid(x_range=[-5,5], y_range=[-5,5])
+tikz.draw_axis(x_range=[-5,5], y_range=[-5,5])
 
 tikz.draw_angle(A,C,B, radius=0.3)
 tikz.draw_angle(A,B,C, radius=0.3)
@@ -41,3 +41,4 @@ tikz.end('tikzpicture')
 tikz.end('document')
 
 tikz.pdf()
+#This will compile the TeX file using pdfLaTeX
