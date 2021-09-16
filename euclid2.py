@@ -194,6 +194,8 @@ class Line(GObject):
             out=intersection_line_segment(self, obj)
         elif obj.type=="ray":
             out=intersection_line_ray(self, obj)
+        elif obj.type=="circle":
+            out=intersection_line_circle(self, obj)
         else:
             out=None
 
@@ -394,6 +396,8 @@ class Segment(GObject):
             out=intersection_segment_segment(self, obj)
         elif obj.type=="ray":
             out=intersection_segment_ray(self, obj)
+        elif obj.type=="circle":
+            out=intersection_ray_circle(self, obj)
         else:
             out=None
 
@@ -462,6 +466,8 @@ class Ray(GObject):
             out=intersection_segment_ray(obj, self)
         elif obj.type=="ray":
             out=intersection_ray_ray(self, obj)
+        elif obj.type=="circle":
+            out=intersection_segment_circle(self, obj)
         else:
             out=None
 
@@ -580,6 +586,27 @@ class Circle(GObject):
             int_=intersection_circle_circle(self, Circ)
             out=[Line(point, q) for q in int_]
         return out
+
+    def intersection(self,obj):
+        if obj.type=="line":
+            out=intersection_line_circle(obj, self)
+        elif obj.type=="segment":
+            out=intersection_segment_circle(obj, self)
+        elif obj.type=="ray":
+            out=intersection_ray_circle(obj, self)
+        elif obj.type=="circle":
+            out=intersection_circle_circle(obj, self)
+        else:
+            out=None
+
+        return out
+
+    def __and__(self, obj):
+        return self.intersection(obj)
+
+    def rotate(self, point, angle):
+        return Circle(rotate(self.center, point, angle), self.radius)
+
 
 
 def common_tangents(circle1 ,circle2):
