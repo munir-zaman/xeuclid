@@ -1,0 +1,40 @@
+%tikz_draw
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{tikz}
+%tikzlibrary
+\usetikzlibrary{arrows.meta}
+%preamble
+
+
+\begin{document}
+
+\begin{tikzpicture}
+
+\draw[cyan!50!black, thick] (0, 0) circle (2);
+\draw[cyan!50!black, thick] (3, 3) circle (1);
+\draw[black, thick, Stealth-Stealth] (-7.999999999999999, -2.5345651559895197) -- (8.0, 7.219223593713645);
+\draw[black, thick, Stealth-Stealth] (-2.5345651559895197, -7.999999999999999) -- (7.219223593713645, 8.0);
+\draw[gray] (-8.0, -8.0) -- (8.0, 8.0);
+\draw[black, thick]  (0, 0) -- (6.000000000001919, 6.000000000001919);
+\draw[black, thick]  (0, 0) -- (-1.0410352084290269, 1.707701874860816);
+\draw[black, thick]  (3, 3) -- (2.47948239578532, 3.8538509374306815);
+\filldraw[fill=cyan!20!black, draw=black] (0,0) circle (2pt);
+\filldraw[fill=cyan!20!black, draw=black] (3,3) circle (2pt);
+\filldraw[fill=cyan!20!black, draw=black] (6.000000000001919,6.000000000001919) circle (2pt);
+\filldraw[fill=cyan!20!black, draw=black] (-1.0410352084290269,1.707701874860816) circle (2pt);
+\filldraw[fill=cyan!20!black, draw=black] (2.47948239578532,3.8538509374306815) circle (2pt);
+\draw (0, 0) node [anchor=north, inner sep=8pt] {$C_2$};
+\draw (3, 3) node [anchor=north, inner sep=8pt] {$C_1$};
+\draw (2.47948239578532, 3.8538509374306815) node [anchor=south, inner sep=8pt] {$T_1$};
+\draw (-1.0410352084290269, 1.707701874860816) node [anchor=south, inner sep=8pt] {$T_2$};
+\draw (2.73974119789266, 3.176925468715341) node [anchor=east, inner sep=2pt] {$r_1$};
+\draw (-0.5205176042145134, 0.853850937430408) node [anchor=east, inner sep=4pt] {$r_2$};
+\draw (6.000000000001919, 6.000000000001919) node [anchor=north, inner sep=5pt] {$P$};
+\end{tikzpicture}
+\end{document}
