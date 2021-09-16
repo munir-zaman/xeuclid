@@ -14,15 +14,15 @@ rndv=np.vectorize(rnd)
 
 sqrt=lambda n: mth.sqrt(n)
 
-sin=lambda a: mth.sin(mth.radians(a))
+sin=lambda a: round(mth.sin(mth.radians(a)), 12)
 
 asin=lambda a: mth.degrees(mth.asin(a))%180
 
-cos=lambda a: mth.cos(mth.radians(a))
+cos=lambda a: round(mth.cos(mth.radians(a)), 12)
 
 acos=lambda a: mth.degrees(mth.acos(a))%180
 
-tan=lambda a: mth.tan(mth.radians(a))
+tan=lambda a: round(mth.tan(mth.radians(a)), 12)
 
 atan=lambda a: mth.degrees(mth.atan(a))%180
 
@@ -69,6 +69,11 @@ def quad(a,b,c):
 
 col_vector=lambda A: np.reshape(A,(len(A),1))
 row_vector=lambda A: np.reshape(A,(len(A),))
+
+def polar(r, theta, center=col_vector([0, 0])):
+    V = col_vector( [r * cos(theta), r * sin(theta)] )
+    v = V + center
+    return v
 
 def system(A,B):
     """ returns the solution, `x`, of the linear system, `Ax=B`
