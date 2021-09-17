@@ -181,7 +181,7 @@ class Tikz():
         int1=[line.intersection(down), line.intersection(left)]
         int2=[line.intersection(up), line.intersection(right)]
 
-        in_range=lambda p: (xmin <= p[0,0] <= xmax) and (ymin <= p[1,0] <= ymax) if not isnone(p) else False
+        in_range=lambda p: (xmin <= round(p[0,0], 12) <= xmax) and (ymin <= round(p[1,0], 12) <= ymax) if not isnone(p) else False
         #might cause trouble due to limitations of floating point arithmetic
 
         int1_=[p for p in int1 if in_range(p)]
@@ -206,6 +206,10 @@ class Tikz():
 
         self.write(line_draw_code)
 
+    def draw_lines(self, *lines, config=def_line_config, x_range=[-5,5], y_range=[-5,5]):
+        for line in lines:
+            self.draw_line(line, config=config, x_range=x_range, y_range=y_range)
+
     def draw_ray(self, ray, config=def_ray_config, x_range=[-5,5], y_range=[-5, 5]):
         #ray.A cannot be outside given x y range
         xmin, xmax=x_range
@@ -225,7 +229,8 @@ class Tikz():
         int1=[ray.intersection(down), ray.intersection(left)]
         int2=[ray.intersection(up), ray.intersection(right)]
 
-        in_range=lambda p: (xmin <= p[0,0] <= xmax) and (ymin <= p[1,0] <= ymax) if not isnone(p) else False
+        in_range=lambda p: (xmin <= round(p[0,0], 12) <= xmax) and (ymin <= round(p[1,0], 12) <= ymax) if not isnone(p) else False
+        #might cause trouble due to limitations of floating point arithmetic
 
         int1_=[p for p in int1 if in_range(p)]
         int2_=[q for q in int2 if in_range(q)]
@@ -275,4 +280,5 @@ class Tikz():
         node_code=f"\\draw{Config} {X,Y} node {node_Config} "+"{"+f"{text}"+"};"
         
         self.write(node_code)
+
 
