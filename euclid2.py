@@ -32,7 +32,7 @@ def angle(A,B,C):
     t1=atan2(A1,A2)
     t2=atan2(C1,C2)
 
-    return rnd((t2-t1)%360)
+    return round((t2-t1)%360, 12)
 
 def angle_between_vectors(v1,v2):
     return angle(v1, origin, v2)
@@ -61,12 +61,15 @@ def angle_bisector(A,B,C):
     return line
 
 def intersection_line_line(line1,line2):
-    v1x,v1y=line1.v[0,0],line1.v[1,0]
-    v2x,v2y=line2.v[0,0],line2.v[1,0]
-
-    V=np.array([[v1x,-1*v2x],[v1y,-1*v2y]])
 
     if not (line1 | line2):
+        # if the lines are not parallel
+        # then, they intersect
+
+        v1x,v1y=line1.v[0,0],line1.v[1,0]
+        v2x,v2y=line2.v[0,0],line2.v[1,0]
+        V=np.array([[v1x,-1*v2x],[v1y,-1*v2y]])
+
         A=line2.A-line1.A
         T=system(V, A)
         #print(T)
@@ -125,6 +128,7 @@ class Line(GObject):
         self.A=A
         self.B=B
         self.v=self.B-self.A
+        # v is the velocity vector
         self.type='line'
 
         if isclose(self.v[0,0], 0) and isclose(self.v[1,0], 0):
@@ -240,7 +244,7 @@ class Line(GObject):
         v1=self.v
         v2=line.v
         theta=angle_between_vectors(v1, v2)%180
-        return round(theta,8)
+        return theta
 
     def distance(self, obj):
         out=None
@@ -362,7 +366,7 @@ class Segment(GObject):
     def inv(self,P):
         out_=self.line.inv(P)
         if out_!=None:
-            out= out_ if (0 <= out_ <= 1) else None
+            out= out_ if (0 <= round(out_, 8) <= 1) else None
         else:
             out=None
 
@@ -432,7 +436,7 @@ class Ray(GObject):
     def inv(self, point):
         out_=self.line.inv(point)
         if out_!=None:
-            out= out_ if (out_ >= 0) else None
+            out= out_ if (round(out_, 8) >= 0) else None
         else:
             out=None
 
@@ -498,7 +502,9 @@ class Polygon(GObject):
 
 
 def intersection_line_circle(line, circle):
-    if rnd(line.distance(circle.center)) < circle.radius:
+    D=line.distance(circle.center)
+    out=[]
+    if round(D, 8) <= circle.radius:
         dx, dy= row_vector(circle.center - line.A)
         vx, vy= row_vector(line.v)
         r= circle.radius
@@ -510,18 +516,13 @@ def intersection_line_circle(line, circle):
 
         u=quad(a, b, c)
 
-        t=[acos(x) for x in u] + [-acos(x) for x in u]
+        t=[mth.degrees(mth.acos(x)) for x in u] + [-mth.degrees(mth.acos(x)) for x in u]
 
-        out=[rndv(circle(theta)) for theta in t if (circle(theta) in line)]
-
-    elif isclose(rnd(line.distance(circle.center)), circle.radius):
-        out= [line.perpendicular_line(circle.center) & line]
-
-    else:
-        out=[]
+        out=[(circle(theta)) for theta in t if (circle(theta) in line)]
 
     return get_rid_of_multiple_points(out)
-    
+
+
 def intersection_segment_circle(segment, circle):
     int_=intersection_line_circle(segment.line, circle)
     out=[point for point in int_ if (point in segment)]
@@ -535,11 +536,18 @@ def intersection_ray_circle(ray, circle):
 def intersection_circle_circle(circle1, circle2):
     d=dist(circle1.center, circle2.center)
     r1,r2= circle1.radius, circle2.radius
-    
-    theta= acos((r1**2 + d**2 - r2**2)/(2*r1*d))
-    s1=Ray(circle1.center, rotate(circle2.center, circle1.center, theta))
-    s2=Ray(circle1.center, rotate(circle2.center, circle1.center, -theta))
-    out=intersection_segment_circle(s1, circle1) + intersection_segment_circle(s2, circle1)
+        
+    out=[]
+    if round(d, 8) <= r2 + r1:    
+        theta= acos((r1**2 + d**2 - r2**2)/(2*r1*d))
+            
+        c1c2=circle1.center - circle2.center
+        x_angle=angle_between_vectors(x_vect, c1c2)
+
+        R1=Ray(circle1.center, circle2.center).rotate(circle1.center, theta)
+        R2=Ray(circle1.center, circle2.center).rotate(circle1.center, -theta)
+
+        out=intersection_ray_circle(R1, circle1) + intersection_ray_circle(R2, circle1)
 
     return get_rid_of_multiple_points(out)
 
@@ -577,8 +585,8 @@ class Circle(GObject):
         if point in self:
             line=Line(point, self.center)
             perp_line=line.perpendicular_line(point)
-            out=perp_line
-        elif rnd(self.power(point)) < 0:
+            out=[perp_line]
+        elif round(self.power(point), 8) < 0:
             out=[]
         else:
             ABmid=mid(self.center, point)
@@ -610,26 +618,41 @@ class Circle(GObject):
 
 
 def common_tangents(circle1 ,circle2):
-    if circle1.radius==circle2.radius:
-        out=[]
+    out=[]
+
+    if circle2.radius > circle1.radius:
+        c2=circle2
+        c1=circle1
     else:
-        if circle2.radius > circle1.radius:
-            c2=circle2
-            c1=circle1
-        else:
-            c2=circle1
-            c1=circle2
+        c2=circle1
+        c1=circle2
 
-        r2=c2.radius
-        r1=c1.radius
-        d=dist(c1.center, c2.center)
+    r2=c2.radius
+    r1=c1.radius
+    d=dist(c1.center, c2.center)
 
+    if isclose(circle1.radius,circle2.radius):
+        c1c2Line= Line(circle1.center, circle2.center)
+        perp_c1c2Line=c1c2Line.perpendicular_line(circle1.center)
+        int_=intersection_line_circle(perp_c1c2Line, circle1)
+        l1=perp_c1c2Line.perpendicular_line(int_[0])
+        l2=perp_c1c2Line.perpendicular_line(int_[1])
+        out= out+ [l1, l2]
+
+    elif rnd(d) >= (r2-r1):
         b1=((r1)/(r2-r1))* d
         c1c2=c1.center - c2.center
         x_angle=angle_between_vectors(x_vect, c1c2)
         P=polar(b1, x_angle, center=c1.center)
+        out= out + c1.tangent(P)
 
-        out=c1.tangent(P)
+    if rnd(d) >= (r2+r1):
+        B1= ((r1)/(r2+r1)) * d
+        c2c1=c2.center - c1.center
+        X_angle=angle_between_vectors(x_vect, c2c1)
+        P_=polar(B1, X_angle, center=c1.center)
+        out= out+ c1.tangent(P_)
+
     return out
 
 def points_to_circle(point1, point2, point3):
