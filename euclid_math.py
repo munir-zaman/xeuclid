@@ -14,15 +14,15 @@ rndv=np.vectorize(rnd)
 
 sqrt=lambda n: mth.sqrt(n)
 
-sin=lambda a: round(mth.sin(mth.radians(a)), 12)
+sin=lambda a: round(mth.sin(mth.radians(a)), 16)
 
 asin=lambda a: mth.degrees(mth.asin(a))%180
 
-cos=lambda a: round(mth.cos(mth.radians(a)), 12)
+cos=lambda a: round(mth.cos(mth.radians(a)), 16)
 
 acos=lambda a: mth.degrees(mth.acos(a))%180
 
-tan=lambda a: round(mth.tan(mth.radians(a)), 12)
+tan=lambda a: round(mth.tan(mth.radians(a)), 16)
 
 atan=lambda a: mth.degrees(mth.atan(a))%180
 
@@ -30,7 +30,8 @@ atan2=lambda x,y: mth.degrees(mth.atan2(y,x))
 
 def get_rid_of_multiple_points(l):
     L=l.copy()
-    L_=set([tuple(row_vector(point)) for point in L])
+    RND=np.vectorize(lambda x: round(x, 12))
+    L_=set([tuple(RND(row_vector(point))) for point in L])
     out=[col_vector(p) for p in L_]
 
     return out
