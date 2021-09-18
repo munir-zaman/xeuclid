@@ -245,7 +245,7 @@ class Tikz():
 
         self.write(ray_draw_code)
 
-    def draw_angle(self, A, B, C, config=def_arc_config, radius=1, fill_config=def_arc_fill_config):
+    def draw_angle(self, A, B, C, config=def_arc_config, radius=1, fill_config=def_arc_fill_config, right_angle=True):
         
         Angle=angle(A, B, C)
         Bx, By=row_vector(B)
@@ -256,9 +256,13 @@ class Tikz():
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         fill_Config=f"[{fill_config}]" if (not isnone(fill_config) and fill_config!="") else ""
 
-        draw_angle_code=f"\\draw{draw_Config}  ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}];"
-        fill_angle_code=f"\\fill{fill_Config} {Bx,By} -- ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
-        
+        if (not right_angle) or (not isclose(Angle, 90)):
+            draw_angle_code=f"\\draw{draw_Config}  ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}];"
+            fill_angle_code=f"\\fill{fill_Config} {Bx,By} -- ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
+        else:
+            draw_angle_code=f"\\draw{draw_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
+            fill_angle_code=f"\\fill{fill_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
+
         self.write(fill_angle_code)
         self.write(draw_angle_code)
 
