@@ -137,6 +137,9 @@ class Line(GObject):
     def __call__(self,t):
         return (self.A+self.v*t)
 
+    def normt(self, t):
+        return self.A + norm(self.v) * t
+
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t"
 
@@ -354,6 +357,9 @@ class Segment(GObject):
     def __call__(self, t):
         return (self.A+ self.v*t)
 
+    def normt(self, t):
+        return self.A + norm(self.v) * t
+
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t in [0, 1]"
 
@@ -424,6 +430,9 @@ class Ray(GObject):
     def __call__(self, t):
         return self.A+ self.v*t
 
+    def normt(self, t):
+        return self.A + norm(self.v) * t
+        
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t >= 0"
 
