@@ -251,7 +251,7 @@ class Tikz():
         Bx, By=row_vector(B)
         
         start_angle=atan2((A-B)[0,0], (A-B)[1,0])
-        end_angle=atan2((C-B)[0,0], (C-B)[1,0])
+        end_angle= start_angle + Angle
 
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         fill_Config=f"[{fill_config}]" if (not isnone(fill_config) and fill_config!="") else ""
