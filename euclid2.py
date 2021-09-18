@@ -161,27 +161,15 @@ class Line(GObject):
         return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t")
 
     def __contains__(self,P):
-        return self.inv(P)!=None
+        Px, Py= row_vector(P)
+        return isclose(sum(param_to_impl_line(self, show=False) * np.array([Px, Py, 1])) , 0)
 
     def inv(self,P):
-        Ax,Ay=row_vector(self.A)
-        vx,vy=row_vector(self.v)
-        Px,Py=row_vector(P)
-
-        if (not isclose(vx,0)) and (not isclose(vy,0)):
-            t1=(Px-Ax)/vx
-            t2=(Py-Ay)/vy
-        elif (isclose(vx,0)):
-            t2=(Py-Ay)/vy
-            t1=t2 if isclose(Px,Ax) else None
-        elif (isclose(vy,0)):
-            t1=(Px-Ax)/vx
-            t2=t1 if isclose(Py,Ay) else None
-
-        if not (isnone(t1) or isnone(t2)):
-            out=t1 if isclose(t1,t2) else None
-        else:
-            out=None
+        out=None
+        Px, Py= row_vector(P)
+        impl=param_to_impl_line(self, show=False)
+        if isclose(sum(impl * np.array([Px, Py, 1])) , 0):
+            out= dist(self.A , P)/ dist(origin, self.v)
         return out
 
     def __add__(self,vector):
@@ -289,10 +277,11 @@ class Line(GObject):
         return out
 
 
-def param_to_impl_line(line):
+def param_to_impl_line(line, show=True):
     Ax,Ay=row_vector(line.A)
     vx,vy=row_vector(line.v)
-    print(f"{-1*vy}*x+ {vx}*y+ {vy*Ax-vx*Ay}= 0")
+    if show:
+        print(f"{-1*vy}*x+ {vx}*y+ {vy*Ax-vx*Ay}= 0")
     return np.array([-1*vy, vx, vy*Ax-vx*Ay])
 
 def impl_to_param_line(line):
