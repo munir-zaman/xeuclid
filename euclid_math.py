@@ -60,9 +60,9 @@ in_interval=lambda x,a,b: (a <= x) and (x <= b)
 
 def quad(a,b,c):
     d=b**2-4*a*c
-    if d > 0:
+    if round(d, 8) > 0:
         out=[(-b+d**(1/2))/(2*a),(-b-d**(1/2))/(2*a)]
-    elif d==0:
+    elif isclose(d, 0):
         out=[(-b)/(2*a)]
     else:
         out=[]
