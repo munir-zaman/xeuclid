@@ -12,7 +12,21 @@ origin=np.array([[0],[0]])
 rotation_matrix=lambda theta: np.array([[cos(theta),-1*sin(theta)],
                                         [sin(theta),   cos(theta)]])
 
-rotate=lambda A,B,theta: np.matmul(rotation_matrix(theta),A-B)+B
+#rotate=lambda A,B,theta: np.matmul(rotation_matrix(theta),A-B)+B
+
+def rotate(point, center, angle):
+    return np.matmul(rotation_matrix(angle),point-center)+center
+
+def dilate(point, center, factor):
+    return center + (point - center) * factor
+
+def reflect_about_point(point, center):
+    return rotate(point, center, 180)
+
+def reflect_about_line(point, line):
+    center = line & line.perpendicular_line(point)
+    return rotate(point, center, 180)
+
 
 def angle(A,B,C):
     """ returns the angle <ABC
@@ -211,6 +225,17 @@ class Line(GObject):
     def rotate(self, point, angle):
         A_,B_=rotate(self.A, point, angle),rotate(self.B, point, angle)
         return Line(A_, B_)
+
+    def reflect(self, center):
+        out=None
+        if isinstance(center, GObject):
+            if center.type=="line":
+                out=Line(reflect_about_line(self.A, center), reflect_about_line(self.B, center))
+
+        elif isinstance(center, np.ndarray):
+            out=Line(reflect_about_point(self.A, center), reflect_about_point(self.B, center))
+
+        return out
 
     def parallel_line(self,P):
         return Line(P, self.v+P)
