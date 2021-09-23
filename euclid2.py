@@ -172,6 +172,32 @@ class Line(GObject):
             out= dist(self.A , P)/ dist(origin, self.v)
         return out
 
+    def fx(self, x):
+        vx, vy = row_vector(self.v)
+        Ax, Ay = row_vector(self.A)
+
+        if not isclose(vx, 0):
+            y = Ay + vy * ((x - Ax)/vx)
+        elif isclose(vx, 0) and isclose(x - Ax, 0):
+            y = Ay
+        else:
+            y = None
+
+        return y
+
+    def fy(self, y):
+        vx, vy = row_vector(self.v)
+        Ax, Ay = row_vector(self.A)
+
+        if not isclose(vy, 0):
+            x = Ax + vx * ((y - Ay)/vy)
+        elif isclose(vy, 0) and isclose(y - Ay, 0):
+            x = Ax
+        else:
+            x = None
+
+        return x
+
     def __add__(self,vector):
         return Line(self.A+vector, self.B+vector)
 
