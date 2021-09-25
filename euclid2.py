@@ -310,8 +310,22 @@ def param_to_impl_line(line, show=True):
         print(f"{-1*vy}*x+ {vx}*y+ {vy*Ax-vx*Ay}= 0")
     return np.array([-1*vy, vx, vy*Ax-vx*Ay])
 
-def impl_to_param_line(line):
-    return NotImplemented
+def impl_to_param_line(coeff):
+    a, b, c = coeff
+    vy, vx = -a, b
+
+    V1 = np.array([[-c/a], [0]]) if not isclose(a, 0) else None
+    V2 = np.array([[0], [-c/b]]) if not isclose(b, 0) else None
+
+    if isnone(V1):
+        A=V2
+    elif isnone(V2):
+        A=V1
+    else:
+        A=V1
+    V=col_vector([vx, vy])
+
+    return Line(A, A + V)
 
 def dist(p1,p2):
     """ Return distance between p1 and p2 """
@@ -472,7 +486,7 @@ class Ray(GObject):
 
     def normt(self, t):
         return self.A + norm(self.v) * t
-        
+
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t >= 0"
 
@@ -585,11 +599,11 @@ def intersection_ray_circle(ray, circle):
 def intersection_circle_circle(circle1, circle2):
     d=dist(circle1.center, circle2.center)
     r1,r2= circle1.radius, circle2.radius
-        
+
     out=[]
-    if round(d, 8) <= r2 + r1:    
+    if round(d, 8) <= r2 + r1:
         theta= acos((r1**2 + d**2 - r2**2)/(2*r1*d))
-            
+
         c1c2=circle1.center - circle2.center
         x_angle=angle_between_vectors(x_vect, c1c2)
 
@@ -713,7 +727,7 @@ def points_to_circle(point1, point2, point3):
 
     p1p2_perp=p1p2.line.perpendicular_line(p1p2mid)
     p1p3_perp=p1p3.line.perpendicular_line(p1p3mid)
-    
+
     center=p1p2_perp & p1p3_perp
     radius=dist(center, p1)
 
