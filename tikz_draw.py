@@ -1,6 +1,8 @@
 import os
 from euclid2 import *
 
+RND8=np.vectorize(lambda x: round(x, 8))
+
 def create_file(file_name):
     with open(file_name,"x") as file:
         pass
@@ -116,12 +118,15 @@ class Tikz():
 
     def draw_point(self, point, config=def_point_config, radius=2):
         X,Y=row_vector(point)
+        X,Y=round(X, 8),round(Y, 8)
+
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius}pt);"
         self.write(draw_point_code)
 
     def draw_vector(self,vector,start=origin, config=def_vector_config, arrow_tip=def_arrow_tip):
         X,Y=row_vector(vector)
+        X,Y=round(X, 8),round(Y, 8)
 
         Config=f"[{config},{arrow_tip}]" if (not isnone(config) and config!="") else f"[{Tip}]"
         code=f"""
@@ -132,7 +137,7 @@ class Tikz():
         self.write(code)
 
     def draw_path(self,*points, config=def_path_config, cycle=False):
-        points_xy=[(p[0,0], p[1,0]) for p in points]
+        points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
 
         for i in range(0,len(points_xy)-1):
@@ -146,7 +151,7 @@ class Tikz():
         self.write(draw_path_code)
 
     def fill_path(self, *points, fill_config=def_path_fill_config, cycle=False):
-        points_xy=[(p[0,0], p[1,0]) for p in points]
+        points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
 
         for i in range(0,len(points_xy)-1):
@@ -198,8 +203,8 @@ class Tikz():
             p1=int1_[0]
             p2=int2_[0]
 
-        p1=tuple(row_vector(p1))
-        p2=tuple(row_vector(p2))
+        p1=tuple(RND8(row_vector(p1)))
+        p2=tuple(RND8(row_vector(p2)))
         
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         line_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
@@ -237,8 +242,8 @@ class Tikz():
 
         P = int1_[0] if len(int1_)!=0 else int2_[0]
 
-        p1=tuple(row_vector(ray.A))
-        p2=tuple(row_vector(P))
+        p1=tuple(RND8(row_vector(ray.A)))
+        p2=tuple(RND8(row_vector(P)))
 
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         ray_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
@@ -248,10 +253,12 @@ class Tikz():
     def draw_angle(self, A, B, C, config=def_arc_config, radius=1, fill_config=def_arc_fill_config, right_angle=True):
         
         Angle=angle(A, B, C)
-        Bx, By=row_vector(B)
+        Bx, By=RND8(row_vector(B))
         
         start_angle=atan2((A-B)[0,0], (A-B)[1,0])
         end_angle= start_angle + Angle
+
+        Angle, start_angle, end_angle = round(Angle, 8), round(start_angle, 8), round(end_angle, 8)
 
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         fill_Config=f"[{fill_config}]" if (not isnone(fill_config) and fill_config!="") else ""
@@ -267,8 +274,8 @@ class Tikz():
         self.write(draw_angle_code)
 
     def draw_circle(self, circle, config=def_circle_config):
-        Cx, Cy=row_vector(circle.center)
-        radius=circle.radius
+        Cx, Cy= RND8(row_vector(circle.center))
+        radius= round(circle.radius, 8)
 
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
 
@@ -277,12 +284,12 @@ class Tikz():
 
     def node(self, position, node_config=def_node_config , config=def_node_draw_config, text=""):
         X,Y=row_vector(position)
-        
+        X,Y=round(X, 8), round(Y, 8)
+
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         node_Config=f"[{node_config}]" if (not isnone(node_config) and node_config!="") else ""
         
         node_code=f"\\draw{Config} {X,Y} node {node_Config} "+"{"+f"{text}"+"};"
         
         self.write(node_code)
-
 
