@@ -582,18 +582,18 @@ def intersection_line_circle(line, circle):
         t=[mth.degrees(mth.acos(x)) for x in u] + [-mth.degrees(mth.acos(x)) for x in u]
 
         out=[(circle(theta)) for theta in t if (circle(theta) in line)]
-
+    out=[point for point in out if (point in line) and (point in circle)]
     return get_rid_of_multiple_points(out)
 
 
 def intersection_segment_circle(segment, circle):
     int_=intersection_line_circle(segment.line, circle)
-    out=[point for point in int_ if (point in segment)]
+    out=[point for point in int_ if (point in segment) and (point in circle)]
     return out
 
 def intersection_ray_circle(ray, circle):
     int_=intersection_line_circle(ray.line, circle)
-    out=[point for point in int_ if (point in ray)]
+    out=[point for point in int_ if (point in ray) and (point in circle)]
     return out
 
 def intersection_circle_circle(circle1, circle2):
@@ -611,7 +611,7 @@ def intersection_circle_circle(circle1, circle2):
         R2=Ray(circle1.center, circle2.center).rotate(circle1.center, -theta)
 
         out=intersection_ray_circle(R1, circle1) + intersection_ray_circle(R2, circle1)
-
+    out = [point for point in out if (point in circle1) and (point in circle2)]
     return get_rid_of_multiple_points(out)
 
 
