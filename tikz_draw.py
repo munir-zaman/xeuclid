@@ -40,6 +40,7 @@ def_path_config="black, thick"
 def_path_fill_config="cyan, opacity=0.3"
 def_line_config="black, thick, Stealth-Stealth"
 def_arc_fill_config="cyan, opacity=0.3"
+def_arc_tick_config=""
 def_arc_config=""
 def_node_draw_config=""
 def_node_config="anchor=north"
@@ -250,7 +251,7 @@ class Tikz():
 
         self.write(ray_draw_code)
 
-    def draw_angle(self, A, B, C, config=def_arc_config, radius=1, fill_config=def_arc_fill_config, right_angle=True):
+    def draw_angle(self, A, B, C, config=def_arc_config, radius=0.5, fill_config=def_arc_fill_config, right_angle=True, arcs=1, arc_dist=0.075, ticks=0, tick_dtheta=None, tick_len=0.2, tick_config=def_arc_tick_config):
         
         Angle=angle(A, B, C)
         Bx, By=RND8(row_vector(B))
@@ -262,16 +263,36 @@ class Tikz():
 
         draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         fill_Config=f"[{fill_config}]" if (not isnone(fill_config) and fill_config!="") else ""
+        tick_Config=f"[{tick_config}]" if (not isnone(tick_config) and tick_config!="") else ""
 
         if (not right_angle) or (not isclose(Angle, 90)):
             draw_angle_code=f"\\draw{draw_Config}  ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}];"
             fill_angle_code=f"\\fill{fill_Config} {Bx,By} -- ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
+            
+            n_arc = arcs
+            d_arc = arc_dist
+            arc_code = ""
+            for i in range(1, n_arc):
+                arc_code += f"\\draw{draw_Config}  ([shift=({start_angle}:{radius - i * d_arc})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius - i * d_arc}];\n"
+
+            n_ticks = ticks
+            d_ticks = tick_dtheta
+            k_ticks = 0.5
+            if d_ticks is None and n_ticks!=0:
+                d_ticks = k_ticks * (Angle)/(n_ticks)
+            tick_code = ""
+            for j in range(0, n_ticks):
+                tick_code += f"\\draw{tick_Config} ([shift=({start_angle + Angle/2 - ((n_ticks-1) * d_ticks)/2 + (j * d_ticks)}:{radius - tick_len/2})]{Bx},{By}) -- ([shift=({start_angle + Angle/2 - ((n_ticks-1) * d_ticks)/2 + (j * d_ticks) }:{radius + tick_len/2})]{Bx},{By});\n"
+
         else:
             draw_angle_code=f"\\draw{draw_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
             fill_angle_code=f"\\fill{fill_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
+            arc_code=""
 
         self.write(fill_angle_code)
         self.write(draw_angle_code)
+        self.write(arc_code)
+        self.write(tick_code)
 
     def draw_circle(self, circle, config=def_circle_config):
         Cx, Cy= RND8(row_vector(circle.center))
