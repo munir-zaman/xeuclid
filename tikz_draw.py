@@ -26,6 +26,18 @@ def_preamble="""%tikz_draw
 %preamble
 
 """
+standalone="""%tikz_draw
+\\documentclass[tikz, border=5]{standalone}
+\\usepackage[utf8]{inputenc}
+\\usepackage[english]{babel}
+\\usepackage{amsmath}
+\\usepackage{amsfonts}
+\\usepackage{amssymb}
+%tikzlibrary
+\\usetikzlibrary{arrows.meta}
+%standalone preamble
+
+"""
 
 def_editor="vim"
 pdflatex_command='pdflatex -shell-escape'
