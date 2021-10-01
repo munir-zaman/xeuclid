@@ -1,7 +1,12 @@
 import os
 from euclid2 import *
+from pdf2image import convert_from_path, convert_from_bytes
 
 RND8=np.vectorize(lambda x: round(x, 8))
+
+def clean_latex(del_tex = False):
+    latex_extn = "*.aux *.log *.gz" if not del_tex else "*.tex *.aux *.log *.gz"
+    os.system(f"del {latex_extn}")
 
 def create_file(file_name):
     with open(file_name,"x") as file:
@@ -10,6 +15,12 @@ def create_file(file_name):
 def write_to_file(file_name,text):
     with open(file_name,"a") as file:
         file.write(text+"\n")
+
+def convert_pdf(path, file_type="png", dpi=600, out_path=None, name="page"):
+    if out_path is None:
+        out_path = os.getcwd()
+    convert_from_path(str(path), dpi=dpi, output_folder=out_path, fmt=file_type, output_file=name)
+    print(f"pdf2image file output path: \n{out_path}")
 
 
 def_preamble="""%tikz_draw
@@ -66,7 +77,8 @@ class Tikz():
             create_file(file_name)
             #creates the file
         except:
-            print('WARNING: FILE ALREADY EXISTS')
+            print('WARNING: FILE ALREADY EXISTS. FILE WILL BE OVERWRITTEN')
+            os.system(f"del {file_name}")
         if preamble!=None:
             write_to_file(file_name,preamble)
             #writes the preamble
@@ -92,6 +104,19 @@ class Tikz():
 
     def pdf(self):
         os.system(f'{pdflatex_command} {self.file_name}')
+    
+    def png(self,dpi=500, pdf=True, clean=True):
+        if pdf or (self.file_name.replace(".tex", ".pdf") not in os.listdir()):
+            self.pdf()
+        out_path = os.getcwd() + "\\" + self.file_name.replace(".tex", "_images") + "\\"
+        file_path = os.getcwd() + "\\" + self.file_name.replace(".tex", ".pdf")
+        try:
+            os.mkdir(out_path)
+        except FileExistsError:
+            pass
+        convert_pdf(file_path, dpi=dpi, out_path=out_path)
+        if clean:
+            clean_latex()
 
     def clip(self, x_range=[-5,5], y_range=[-5,5]):
         xmin,xmax=x_range
@@ -208,7 +233,7 @@ class Tikz():
         if len(int1_)==len(int2_):
             p1=int1_[0]
             p2=int2_[0]
-        elif len(int1_)==2 and int2_==0:
+        elif len(int1_)==2 and len(int2_)==0:
             p1,p2=int1_
         elif len(int1_)==0 and len(int2_)==2:
             p1,p2=int2_
@@ -300,6 +325,7 @@ class Tikz():
             draw_angle_code=f"\\draw{draw_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
             fill_angle_code=f"\\fill{fill_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
             arc_code=""
+            tick_code=""
 
         self.write(fill_angle_code)
         self.write(draw_angle_code)
