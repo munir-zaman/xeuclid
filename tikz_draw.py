@@ -1,20 +1,13 @@
 import os
 from euclid2 import *
 from pdf2image import convert_from_path, convert_from_bytes
+from file_edit import *
 
 RND8=np.vectorize(lambda x: round(x, 8))
 
 def clean_latex(del_tex = False):
     latex_extn = "*.aux *.log *.gz" if not del_tex else "*.tex *.aux *.log *.gz"
     os.system(f"del {latex_extn}")
-
-def create_file(file_name):
-    with open(file_name,"x") as file:
-        pass
-
-def write_to_file(file_name,text):
-    with open(file_name,"a") as file:
-        file.write(text+"\n")
 
 def convert_pdf(path, file_type="png", dpi=600, out_path=None, name="page"):
     if out_path is None:
