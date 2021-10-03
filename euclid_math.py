@@ -1,7 +1,6 @@
 import math as mth
 import numpy as np
 
-
 def isnone(obj):
     return str(type(obj))=="<class 'NoneType'>"
 

@@ -1,5 +1,4 @@
-from euclid2 import *
-from tikz_draw import *
+from euclid import *
 
 A=col_vector([2,1])
 B=col_vector([-1,4])

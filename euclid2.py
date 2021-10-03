@@ -1,4 +1,4 @@
-from euclid_math import *
+from euclid.euclid_math import *
 
 
 class GObject(object):

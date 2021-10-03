@@ -1,4 +1,4 @@
-from tikz_draw import *
+from euclid import *
 
 
 def square_on_side(A, B):

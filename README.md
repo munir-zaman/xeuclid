@@ -11,8 +11,7 @@ To use `tikz_draw.py` you have to have `LaTeX` and `tikz` package installed.
 # Example Usage
 
 ```python
-from euclid2 import *
-from tikz_draw import *
+from euclid import *
 
 A=col_vector([2,1])
 B=col_vector([-1,4])
@@ -62,8 +61,7 @@ tikz.pdf()
 ![Output](doc/example_usage_files/triangle.png)
 
 ```python
-from euclid2 import *
-from tikz_draw import *
+from euclid import *
 
 A=origin
 B=col_vector([3,3])
@@ -116,7 +114,7 @@ tikz.pdf()
 ![Output](doc/example_usage_files/common_tangents.jpg)
 
 ```python
-from tikz_draw import *
+from euclid import *
 
 
 def square_on_side(A, B):

@@ -1,5 +1,5 @@
 import os
-from euclid2 import *
+from euclid.euclid2 import *
 from pdf2image import convert_from_path, convert_from_bytes
 from file_edit import *
 

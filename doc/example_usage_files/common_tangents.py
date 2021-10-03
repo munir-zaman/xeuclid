@@ -1,5 +1,4 @@
-from euclid2 import *
-from tikz_draw import *
+from euclid import *
 
 A=origin
 B=col_vector([3,3])
