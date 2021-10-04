@@ -1,17 +1,24 @@
 import os
 
 def create_file(file_name):
+    """ creates the file `file_name` """
     with open(file_name,"x") as file:
         pass
 
 def write_to_file(file_name,text):
-    with open(file_name,"a") as file:
-        file.write(text+"\n")
+    """ writes `text` in file `file_name` """
+    if type(text) == str: 
+        with open(file_name, "a") as file:
+            file.write(text)
+    elif type(text) == list:
+        with open(file_name, "a") as file:
+            file.writelines(text)
 
 def readlines_file(file_name):
     with open(file_name, "r") as file:
         out = file.readlines()
     return out
+
 
 class File():
 
@@ -46,13 +53,16 @@ class File():
             with open(self.name, "w+") as file:
                 file.writelines(text)
 
-    def replace(self, lineno, new_text):
+    def replace(self, new_text, lineno):
         lineno -= 1
         file_content = self.readlines()
-        file_length = len(file_content)
+        file_length = len(file_content) - 1
         text = new_text
-        if 0 <= lineno <= file_length:
+
+        if (0 <= lineno <= file_length) and str == type(text):
             file_content[lineno] = new_text
+        elif list == type(text):
+            pass
         else:
             print("Line no out of range.")
 
@@ -60,17 +70,25 @@ class File():
 
     def write(self, text, lineno = None):
         content = self.readlines()
-        lineno -= 1
+
+        if not lineno is None:
+            lineno -= 1
 
         if lineno is None:
             self.append(text)
 
         elif type(lineno) == int and 0 <= lineno <= len(content) - 1:
-            new_content = content[:lineno] + [text] + content[lineno:]
+            if str == type(text):
+                new_content = content[:lineno] + [text] + content[lineno:]
+            elif list == type(text):
+                new_content = content[:lineno] + text + content[lineno:]
             self.rewrite(new_content)
 
         elif type(lineno) == int and not (0 <= lineno <= len(content) - 1):
-            new_content = content[:] + (lineno - len(content))*["\n"] + [text]
+            if str == type(text):
+                new_content = content[:] + (lineno - len(content))*["\n"] + [text]
+            elif list == type(text):
+                new_content = content[:] + (lineno - len(content))*["\n"] + text
             self.rewrite(new_content)
 
 
