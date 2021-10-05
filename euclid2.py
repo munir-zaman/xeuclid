@@ -160,16 +160,17 @@ class Line(GObject):
     def __str__(self):
         return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t")
 
-    def __contains__(self,P):
-        Px, Py= row_vector(P)
-        return isclose(sum(param_to_impl_line(self, show=False) * np.array([Px, Py, 1])) , 0)
+    def __contains__(self, point):
+        return (not self.inv(point) is None)
 
-    def inv(self,P):
-        out =None
-        Px, Py = row_vector(P)
-        impl = param_to_impl_line(self, show=False)
-        if isclose(sum(impl*np.array([Px, Py, 1])) , 0):
-            out = dist(self.A , P)/ dist(origin, self.v)
+    def inv(self, point):
+        out = None
+        P = row_vector(point - self.A)
+        V = row_vector(self.v)
+        for i in range(0, len(V)):
+            if not isclose(V[i], 0):
+                t = P[i]/V[i]
+        out = t if np.all(P == V*t) else None
         return out
 
     def fx(self, x):
@@ -198,28 +199,28 @@ class Line(GObject):
 
         return x
 
-    def __add__(self,vector):
+    def __add__(self, vector):
         return Line(self.A+vector, self.B+vector)
 
-    def __radd__(self,vector):
+    def __radd__(self, vector):
         return Line(self.A+vector, self.B+vector)
 
-    def __sub__(self,vector):
+    def __sub__(self, vector):
         return Line(self.A-vector, self.B-vector)
 
-    def __rsub__(self,vector):
+    def __rsub__(self, vector):
         return Line(vector-self.A, vector-self.B)
 
-    def __mul__(self,value):
+    def __mul__(self, value):
         return Line(value*self.A, value*self.B)
 
-    def __rmul__(self,value):
+    def __rmul__(self, value):
         return Line(value*self.A, value*self.B)
 
-    def __truediv__(self,value):
+    def __truediv__(self, value):
         return Line(self.A/value, self.B/value)
 
-    def matmul(self,matrix):
+    def matmul(self, matrix):
         return Line(matmul(matrix, self.A), matmul(matrix, self.B))
 
     def intersection(self,obj):
@@ -327,15 +328,15 @@ def impl_to_param_line(coeff):
 
     return Line(A, A + V)
 
-def dist(p1,p2) -> np.ndarray:
-    """ Return distance between p1 and p2 """
+def dist(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
+    """ Returns the distance between `p1` and `p2` """
     if p1.shape != p2.shape:
         raise ValueError("`p1` and `p2` must have the same shape")
 
     return round(mth.sqrt(sum((p1 - p2)**2)), 8)
 
-def mid(p1,p2) -> np.ndarray:
-    """ Return midpoint of p1 and p2 """
+def mid(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
+    """ Returns the midpoint of `p1` and `p2` """
     if p1.shape != p2.shape:
         raise ValueError("`p1` and `p2` must have the same shape")
 
@@ -348,7 +349,7 @@ zero_vect=np.array([[0],[0]])
 y_axis=Line(zero_vect,y_vect)
 x_axis=Line(zero_vect,x_vect)
 
-def collinear(*points):
+def collinear(*points: np.ndarray):
     """ collinear(*points)
 
         checks if the given set of points are collinear
@@ -375,7 +376,7 @@ def collinear(*points):
 
     return line
 
-def concurrent(*lines):
+def concurrent(*lines: Line):
     """ checks if the given set of lines are concurrent """
     ints=[]
     out=True
@@ -404,7 +405,7 @@ def concurrent(*lines):
 
 
 class Segment(GObject):
-    def __init__(self, A, B):
+    def __init__(self, A: np.ndarray, B: np.ndarray):
         self.A=A
         self.B=B
         self.v=self.B-self.A
@@ -426,8 +427,8 @@ class Segment(GObject):
     def __str__(self):
         return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t in [0, 1]")
 
-    def __contains__(self,P):
-        return self.inv(P)!=None
+    def __contains__(self, point):
+        return (not self.inv(point) is None)
 
     def inv(self,P):
         out_=self.line.inv(P)
@@ -500,7 +501,7 @@ class Ray(GObject):
         return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t >= 0")
 
     def __contains__(self, point):
-        return self.inv(point)!=None
+        return (not self.inv(point) is None)
 
     def inv(self, point):
         out_=self.line.inv(point)
