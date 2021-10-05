@@ -165,11 +165,11 @@ class Line(GObject):
         return isclose(sum(param_to_impl_line(self, show=False) * np.array([Px, Py, 1])) , 0)
 
     def inv(self,P):
-        out=None
-        Px, Py= row_vector(P)
-        impl=param_to_impl_line(self, show=False)
-        if isclose(sum(impl * np.array([Px, Py, 1])) , 0):
-            out= dist(self.A , P)/ dist(origin, self.v)
+        out =None
+        Px, Py = row_vector(P)
+        impl = param_to_impl_line(self, show=False)
+        if isclose(sum(impl*np.array([Px, Py, 1])) , 0):
+            out = dist(self.A , P)/ dist(origin, self.v)
         return out
 
     def fx(self, x):
@@ -327,13 +327,19 @@ def impl_to_param_line(coeff):
 
     return Line(A, A + V)
 
-def dist(p1,p2):
+def dist(p1,p2) -> np.ndarray:
     """ Return distance between p1 and p2 """
-    return mth.sqrt((p1[0,0]-p2[0,0])**2+(p1[1,0]-p2[1,0])**2)
+    if p1.shape != p2.shape:
+        raise ValueError("`p1` and `p2` must have the same shape")
 
-def mid(p1,p2):
+    return round(mth.sqrt(sum((p1 - p2)**2)), 8)
+
+def mid(p1,p2) -> np.ndarray:
     """ Return midpoint of p1 and p2 """
-    return col_vector([(p1[0,0]+p2[0,0])/2,(p1[1,0]+p2[1,0])/2])
+    if p1.shape != p2.shape:
+        raise ValueError("`p1` and `p2` must have the same shape")
+
+    return (p1 + p2)/2
 
 
 x_vect=np.array([[1],[0]])
