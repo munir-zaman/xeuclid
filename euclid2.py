@@ -411,7 +411,6 @@ class Segment(GObject):
         self.v=self.B-self.A
         self.type="segment"
         self.line=Line(self.A, self.B)
-
         self.mid=mid(self.A, self.B)
         self.length=dist(self.A, self.B)
 

@@ -82,7 +82,7 @@ def system(A,B):
     if np.linalg.det(A)!=0:
         out=np.linalg.solve(A, B)
     else:
-        print("solution does not exist in R")
+        #print("solution does not exist in R")
         out=None
     return out
 

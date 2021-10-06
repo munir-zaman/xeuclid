@@ -1,8 +1,6 @@
 from euclid.euclid_math import *
 from euclid.euclid2 import dist, mid, GObject, Line, Segment, Ray
 import numpy as np
-from numpy.core.numeric import isclose
-from numpy.lib.shape_base import row_stack
 
 
 class GObject3(GObject):
@@ -43,22 +41,38 @@ def intersection_segment3_segment3(segment1, segment2):
         out=None
     return out
 
-class Line3(Line, GObject3):
+
+class Line3(GObject3):
     def __init__(self, A, B):
-        Line.__init__(self, A, B)
+        self.A=A
+        self.B=B
+        self.v=self.B-self.A
         self.type = "line3"
+
+    def __call__(self,t):
+        return (self.A+self.v*t)
+
+    def normt(self, t):
+        return self.A + norm(self.v) * t
 
     def __repr__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}, {self.A[2,0]}] + [{self.v[0,0]}, {self.v[1,0]}, {self.v[2,0]}] * t"
 
     def __str__(self):
         return f"[{self.A[0,0]}, {self.A[1,0]}, {self.A[2,0]}] + [{self.v[0,0]}, {self.v[1,0]}, {self.v[2,0]}] * t"
+    
+    def inv(self, point):
+        out = None
+        P = row_vector(point - self.A)
+        V = row_vector(self.v)
+        for i in range(0, len(V)):
+            if not isclose(V[i], 0):
+                t = P[i]/V[i]
+        out = t if np.all(P == V*t) else None
+        return out
 
-    def fx(self, x):
-        raise NotImplementedError("Line3.fx(x) is not defined")
-
-    def fy(self, y):
-        raise NotImplementedError("Line3.fy(y) is not defined")
+    def fxy(self, x, y):
+        pass
 
     def __add__(self, vector):
         return Line3(self.A+vector, self.B+vector)
@@ -87,15 +101,45 @@ class Line3(Line, GObject3):
     def parallel_line(self,P):
         return Line3(P, self.v+P)
 
-    def perpendicular_line(self,P):
-        return None
+    def intersection(self,obj):
+        if obj.type=="line3":
+            out=intersection_line3_line3(self, obj)
+        else:
+            out=None
+
+        return out
+
+    def __and__(self, obj):
+        return self.intersection(obj)
 
 
-class Segment3(Segment, GObject3):
+class Segment3(GObject3):
     def __init__(self, A: np.ndarray, B: np.ndarray):
-        Segment.__init__(self, A, B)
+        self.A=A
+        self.B=B
+        self.v=self.B-self.A
         self.type="segment3"
         self.line=Line3(self.A, self.B)
+        self.mid=mid(self.A, self.B)
+        self.length=dist(self.A, self.B)
+
+    def __call__(self, t):
+        return (self.A+ self.v*t)
+
+    def normt(self, t):
+        return self.A + norm(self.v) * t
+
+    def __contains__(self, point):
+        return (not self.inv(point) is None)
+
+    def inv(self,P):
+        out_=self.line.inv(P)
+        if out_!=None:
+            out= out_ if (0 <= round(out_, 8) <= 1) else None
+        else:
+            out=None
+
+        return out
 
     def __add__(self,vector):
         return Segment3(self.A+vector, self.B+vector)
@@ -117,6 +161,78 @@ class Segment3(Segment, GObject3):
 
     def __truediv__(self,value):
         return Segment3(self.A/value, self.B/value)
+
+
+class Ray3(GObject3):
+    def __init__(self, A, B):
+        self.A=A
+        self.B=B
+        self.v=self.B-self.A
+        self.type="ray3"
+        self.line=Line3(self.A, self.B)
+
+    def __call__(self, t):
+        return self.A+ self.v*t
+
+    def normt(self, t):
+        return self.A + norm(self.v) * t
+
+    def __repr__(self):
+        return f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t >= 0"
+
+    def __str__(self):
+        return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t, t >= 0")
+
+    def __contains__(self, point):
+        return (not self.inv(point) is None)
+
+    def inv(self, point):
+        out_=self.line.inv(point)
+        if out_!=None:
+            out= out_ if (round(out_, 8) >= 0) else None
+        else:
+            out=None
+
+        return out
+
+    def __add__(self,vector):
+        return Ray(self.A+vector, self.B+vector)
+
+    def __radd__(self,vector):
+        return Ray(self.A+vector, self.B+vector)
+
+    def __sub__(self,vector):
+        return Ray(self.A-vector, self.B-vector)
+
+    def __rsub__(self,vector):
+        return Ray(vector-self.A, vector-self.B)
+
+    def __mul__(self,value):
+        return Ray(value*self.A, value*self.B)
+
+    def __rmul__(self,value):
+        return Ray(value*self.A, value*self.B)
+
+    def __truediv__(self,value):
+        return Ray(self.A/value, self.B/value)
+
+    def intersection(self,obj):
+        if obj.type=="line":
+            out=intersection_line_ray(obj, self)
+        elif obj.type=="segment":
+            out=intersection_segment_ray(obj, self)
+        elif obj.type=="ray":
+            out=intersection_ray_ray(self, obj)
+        elif obj.type=="circle":
+            out=intersection_segment_circle(self, obj)
+        else:
+            out=None
+
+        return out
+
+    def rotate(self, point, angle):
+        A_,B_=rotate(self.A, point, angle), rotate(self.B, point, angle)
+        return Ray(A_, B_)
 
 
 def intersection_plane_plane_plane(plane1, plane2, plane3):
