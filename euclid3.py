@@ -196,44 +196,49 @@ class Ray3(GObject3):
         return out
 
     def __add__(self,vector):
-        return Ray(self.A+vector, self.B+vector)
+        return Ray3(self.A+vector, self.B+vector)
 
     def __radd__(self,vector):
-        return Ray(self.A+vector, self.B+vector)
+        return Ray3(self.A+vector, self.B+vector)
 
     def __sub__(self,vector):
-        return Ray(self.A-vector, self.B-vector)
+        return Ray3(self.A-vector, self.B-vector)
 
     def __rsub__(self,vector):
-        return Ray(vector-self.A, vector-self.B)
+        return Ray3(vector-self.A, vector-self.B)
 
     def __mul__(self,value):
-        return Ray(value*self.A, value*self.B)
+        return Ray3(value*self.A, value*self.B)
 
     def __rmul__(self,value):
-        return Ray(value*self.A, value*self.B)
+        return Ray3(value*self.A, value*self.B)
 
     def __truediv__(self,value):
-        return Ray(self.A/value, self.B/value)
+        return Ray3(self.A/value, self.B/value)
 
     def intersection(self,obj):
-        if obj.type=="line":
-            out=intersection_line_ray(obj, self)
-        elif obj.type=="segment":
-            out=intersection_segment_ray(obj, self)
-        elif obj.type=="ray":
-            out=intersection_ray_ray(self, obj)
-        elif obj.type=="circle":
-            out=intersection_segment_circle(self, obj)
-        else:
-            out=None
-
+        out = None
         return out
 
-    def rotate(self, point, angle):
-        A_,B_=rotate(self.A, point, angle), rotate(self.B, point, angle)
-        return Ray(A_, B_)
 
+def intersection_line3_plane(line, plane):
+    A1 = line.A
+    u1x, u1y, u1z = row_vector(line.v)
+
+    A2 = plane.A
+    u2x, u2y, u2z = row_vector(plane.u)
+    v2x, v2y, v2z = row_vector(plane.v)
+
+    B = A1 - A2
+    A = np.array([[u2x, v2x, -u1x ]
+                  [u2y, v2y, -u1y ]
+                  [u2z, v2z, -u1z]])
+
+    X = system(A, B)
+    s, t, r = row_vector(X)
+    P = line(r)
+
+    return P
 
 def intersection_plane_plane_plane(plane1, plane2, plane3):
     C = col_vector([plane1.c, plane2.c, plane3.c])
