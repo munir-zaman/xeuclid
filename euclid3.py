@@ -230,8 +230,8 @@ def intersection_line3_plane(line, plane):
     v2x, v2y, v2z = row_vector(plane.v)
 
     B = A1 - A2
-    A = np.array([[u2x, v2x, -u1x ]
-                  [u2y, v2y, -u1y ]
+    A = np.array([[u2x, v2x, -u1x ],
+                  [u2y, v2y, -u1y ],
                   [u2z, v2z, -u1z]])
 
     X = system(A, B)
