@@ -55,9 +55,19 @@ def system2(A1,A2):
         out=None
     return out
 
-in_interval=lambda x,a,b: (a <= x) and (x <= b)
+in_interval=lambda x,a,b: (rnd(a) <= rnd(x)) and (rnd(x) <= rnd(b))
 
 def quad(a,b,c):
+    """returns the list of real solutions to the quadratic equation, 
+        a**2 * x+ b * x + c = 0
+        returns an empty list if no solution exists
+        a : float
+        b : float
+        c : float
+
+        returns:   
+            out : list of floats
+    """
     d=b**2-4*a*c
     if round(d, 8) > 0:
         out=[(-b+d**(1/2))/(2*a),(-b-d**(1/2))/(2*a)]
@@ -78,6 +88,12 @@ def polar(r, theta, center=col_vector([0, 0])):
 def system(A,B):
     """ returns the solution, `x`, of the linear system, `Ax=B`
         where `x` and `B` are column vectors and `A` is a matrix.
+        returns `None` if no solution exists.
+        A : np.ndarray
+        B : np.ndarray
+
+        returns 
+            out :
     """
     if np.linalg.det(A)!=0:
         out=np.linalg.solve(A, B)
@@ -104,3 +120,16 @@ def norm(vector):
     V=col_vector([Vx, Vy])
     return V
 
+def dist(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
+    """ Returns the distance between points `p1` and `p2` """
+    if p1.shape != p2.shape:
+        raise ValueError("`p1` and `p2` must have the same shape")
+
+    return round(mth.sqrt(sum((p1 - p2)**2)), 16)
+
+def mid(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
+    """ Returns the midpoint of points `p1` and `p2` """
+    if p1.shape != p2.shape:
+        raise ValueError("`p1` and `p2` must have the same shape")
+
+    return (p1 + p2)/2

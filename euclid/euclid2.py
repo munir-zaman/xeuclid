@@ -170,7 +170,7 @@ class Line(GObject):
         for i in range(0, len(V)):
             if not isclose(V[i], 0):
                 t = P[i]/V[i]
-        out = t if np.all(P == V*t) else None
+        out = t if np.allclose(P, V*t, rtol=0) else None
         return out
 
     def fx(self, x):
@@ -268,7 +268,7 @@ class Line(GObject):
         return isclose(det(V),0.0)
 
     def __and__(self,obj):
-        """Returns the intersection point of `self` and `line`"""
+        """Returns the intersection point of `self` and `obj`"""
         return self.intersection(obj)
 
     def __xor__(self,line):
@@ -327,21 +327,6 @@ def impl_to_param_line(coeff):
     V=col_vector([vx, vy])
 
     return Line(A, A + V)
-
-def dist(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
-    """ Returns the distance between `p1` and `p2` """
-    if p1.shape != p2.shape:
-        raise ValueError("`p1` and `p2` must have the same shape")
-
-    return round(mth.sqrt(sum((p1 - p2)**2)), 8)
-
-def mid(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
-    """ Returns the midpoint of `p1` and `p2` """
-    if p1.shape != p2.shape:
-        raise ValueError("`p1` and `p2` must have the same shape")
-
-    return (p1 + p2)/2
-
 
 x_vect=np.array([[1],[0]])
 y_vect=np.array([[0],[1]])
