@@ -1,8 +1,9 @@
 import os
 from euclid.euclid2 import *
-from euclid.file_edit import *
+from euclid.utils.file_edit import *
+from euclid.utils.math import *
 from pdf2image import convert_from_path, convert_from_bytes
-from file_edit import *
+
 
 RND8=np.vectorize(lambda x: round(x, 8))
 
