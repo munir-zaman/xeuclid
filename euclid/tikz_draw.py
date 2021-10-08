@@ -357,3 +357,19 @@ class Tikz():
         
         self.write(node_code)
 
+    def get_texcode(self):
+        file_name = self.file_name
+        file_content = File(file_name).readlines()
+        begin_index, end_index = None, None
+        for i in range(0, len(file_content)):
+            if "\\begin{document}" in file_content[i]:
+                begin_index = i
+            if "\\end{document}" in file_content[i]:
+                end_index = i
+
+        texcode_ = file_content[begin_index+1: end_index]
+        texcode = ""
+        for s in texcode_:
+            texcode += s
+
+        return texcode

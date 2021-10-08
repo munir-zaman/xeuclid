@@ -5,14 +5,14 @@ def create_file(file_name):
     with open(file_name,"x") as file:
         pass
 
-def write_to_file(file_name,text):
+def write_to_file(file_name,text, end="\n"):
     """ writes `text` in file `file_name` """
     if type(text) == str: 
         with open(file_name, "a") as file:
-            file.write(text)
+            file.write(text + end)
     elif type(text) == list:
         with open(file_name, "a") as file:
-            file.writelines(text)
+            file.writelines(text + end)
 
 def readlines_file(file_name):
     with open(file_name, "r") as file:
