@@ -113,6 +113,16 @@ class Tikz():
         if clean:
             clean_latex()
 
+    def svg(self, clean=True):
+        latex_ = f"latex {self.file_name}"
+        os.system(latex_)
+        dvi_name = self.file_name.replace(".tex", ".dvi")
+        dvisvgm_ = f"dvisvgm {dvi_name}"
+        if dvi_name in os.listdir():
+            os.system(dvisvgm_)
+        if clean:
+            clean_latex()
+
     def clip(self, x_range=[-5,5], y_range=[-5,5]):
         xmin,xmax=x_range
         ymin,ymax=y_range
