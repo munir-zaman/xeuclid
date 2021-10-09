@@ -68,24 +68,36 @@ def_circle_config="cyan!20!black"
 
 class Tikz():
     def __init__(self,file_name, preamble=def_preamble):
-        try:
-            create_file(file_name)
-            #creates the file
-        except:
-            print('WARNING: FILE ALREADY EXISTS. FILE WILL BE OVERWRITTEN')
-            os.system(f"del {file_name}")
-        if preamble!=None:
-            write_to_file(file_name,preamble)
-            #writes the preamble
-
+        if not file_name is None:
+            try:
+                create_file(file_name)
+                #creates the file
+            except FileExistsError:
+                print('WARNING: FILE ALREADY EXISTS. FILE WILL BE OVERWRITTEN')
+                os.system(f"del {file_name}")
+            if preamble!=None:
+                write_to_file(file_name,preamble)
+                #writes the preamble
+        else:
+            self.tex_code = ""
         self.file_name=file_name
 
     def write(self,text):
-        write_to_file(self.file_name,text)
+        if not self.file_name is None:
+            write_to_file(self.file_name,text)
+        else:
+            self.tex_code += self.tex_code + text + "\n"
 
-    def read(self):
-        with open(self.file_name) as file:
-            print(file.read())
+    def read(self, show=True):
+        if not self.file_name is None:
+            with open(self.file_name) as file:
+                out = file.read()
+        else:
+            out = self.tex_code
+
+        if show:
+            print(out)
+        return out
 
     def edit(self,editor=def_editor):
         os.system(f'{editor} {self.file_name}')
@@ -99,7 +111,7 @@ class Tikz():
 
     def pdf(self):
         os.system(f'{pdflatex_command} {self.file_name}')
-    
+
     def png(self,dpi=500, pdf=True, clean=True):
         if pdf or (self.file_name.replace(".tex", ".pdf") not in os.listdir()):
             self.pdf()
