@@ -582,6 +582,20 @@ class Polygon(GObject):
         self.area = self.get_area()
         self.bbox = self.get_bbox()
 
+    def isinside(self, point) -> bool:
+        """ returns True if point is inside the polygon
+            else returns False
+
+            point: np.ndarray
+            returns:
+                bool
+        """
+        A = point
+        B = A + 1
+        ray = Ray(A, B)
+        ints = intersection_ray_poly(ray, self)
+        return True if len(ints)%2==1 else False
+
     def get_area(self):
         V=self.vertices[::]
         V.append(self.vertices[0])
@@ -636,26 +650,12 @@ class Polygon(GObject):
 
 
 def intersection_line_circle(line, circle):
-    D=line.distance(circle.center)
-    out=[]
-    if round(D, 8) <= circle.radius:
-        dx, dy= row_vector(circle.center - line.A)
-        vx, vy= row_vector(line.v)
-        r= circle.radius
-        V=sqrt(vx**2 + vy**2)
-
-        a=(r**2)*(V**2)
-        b=2*vy*r*(vy*dx - vx*dy)
-        c=(vy*dx - vx*dy)**2 - (vx**2)*(r**2)
-
-        u=quad(a, b, c)
-
-        t=[mth.degrees(mth.acos(x)) for x in u] + [-mth.degrees(mth.acos(x)) for x in u]
-
-        out=[(circle(theta)) for theta in t if (circle(theta) in line)]
-    out=[point for point in out if (point in line) and (point in circle)]
-    return get_rid_of_multiple_points(out)
-
+    R = circle.radius
+    center = circle.center
+    Ax, Ay = row_vector(line.A - center)
+    vx, vy = row_vector(line.v)
+    out = quad((vx**2 + vy**2), 2*(Ax*vx + Ay*vy), (Ax**2 + Ay**2 - R**2))
+    return [line(t) for t in out]
 
 def intersection_segment_circle(segment, circle):
     int_=intersection_line_circle(segment.line, circle)
