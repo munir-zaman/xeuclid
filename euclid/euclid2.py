@@ -536,23 +536,103 @@ class Ray(GObject):
         return Ray(A_, B_)
 
 
+def intersection_line_poly(line, poly):
+    A, B, C, D = poly.bbox
+    AB = Segment(A, B)
+    BC = Segment(B, C)
+    CD = Segment(C, D)
+    DA = Segment(D, A)
+
+    # first check if line intersects the bounding box of the polygon
+    bbox_int = False
+    for segment in [AB, BC, CD, DA]:
+        if not (line & segment) is None:
+            bbox_int = True
+            break
+    out = []
+    if bbox_int:
+        # calc intersection
+        verts = poly.vertices[::]
+        verts.append(poly.vertices[0])
+
+        for i in range(0, len(verts)-1):
+            edge = Segment(verts[i], verts[i+1])
+            intersection = line & edge
+            if not intersection is None:
+                out.append(intersection)
+    return out
+
+def intersection_segment_poly(segment, poly):
+    ints_ = intersection_line_poly(segment.line, poly)
+    out = [point for point in ints_ if (point in segment)]
+    return out
+
+def intersection_ray_poly(ray, poly):
+    ints_ = intersection_line_poly(ray.line, poly)
+    out = [point for point in ints_ if (point in ray)]
+    return out
+
+
 class Polygon(GObject):
 
     def __init__(self,*vertices):
 
         self.vertices=list(vertices)
         self.type="polygon"
+        self.area = self.get_area()
+        self.bbox = self.get_bbox()
 
-    def area(self):
+    def get_area(self):
         V=self.vertices[::]
         V.append(self.vertices[0])
-        return (0.5)*sum([ np.linalg.det(np.array([[V[i][0,0], V[i+1][0,0]],
-                                                   [V[i][1,0], V[i+1][1,0]]])) for i in range(len(V)-1) ])
+        out = (0.5)*sum([ np.linalg.det(np.array([[V[i][0,0], V[i+1][0,0]],
+                                                  [V[i][1,0], V[i+1][1,0]]])) for i in range(len(V)-1) ])
+        return out
+
+    def get_bbox(self):
+        """ returns the vertices of the bounding rectangle of the polygon
+            returns: list of np.ndarray
+        """
+        vertices = self.vertices[::]
+        vertices_x = []
+        vertices_y = []
+        vertices_ = []
+
+        for p in vertices:
+            vertices_.append((p[0,0], p[1,0]))
+            vertices_x.append(p[0,0])
+            vertices_y.append(p[1,0])
+
+        x_max, x_min = max(vertices_x), min(vertices_x)
+        y_max, y_min = max(vertices_y), min(vertices_y)
+
+        max_px = None
+        min_px = None
+        max_py = None
+        min_py = None
+
+        for q in vertices_:
+            if q[0] == x_max:
+                max_px = q
+            if q[0] == x_min:
+                min_px = q
+            if q[1] == y_max:
+                max_py = q
+            if q[1] == y_min:
+                min_py = q
+
+        down_line = y_axis.perpendicular_line(col_vector(min_py))
+        up_line = y_axis.perpendicular_line(col_vector(max_py))
+        left_line = x_axis.perpendicular_line(col_vector(min_px))
+        right_line = x_axis.perpendicular_line(col_vector(max_px))
+
+        A, B, C, D = down_line & left_line, down_line & right_line, right_line & up_line, left_line & up_line
+
+        return [A, B, C, D]
 
     def rotate(self, point, angle):
         vertices=[rotate(p, point, angle) for p in self.vertices]
         return Polygon(vertices)
-
 
 
 def intersection_line_circle(line, circle):
