@@ -649,6 +649,23 @@ class Polygon(GObject):
         return Polygon(vertices)
 
 
+def convex_hull(*points):
+    #find the point `P` with min y - coordinate
+    P = min(points, key=lambda p: p[1,0])
+    # get the list of remaining points `Q`
+    Q = [point for point in points if not np.all(point == P)]
+    # sort the remaining points by polar 
+    # angle in counter clockwise order around `P`
+    sorted_Q = sorted(Q, key= lambda p: atan2(p[0,0] - P[0,0], p[1,0] - P[1,0]))
+    hull = [P, sorted_Q[0], sorted_Q[1]]
+    # perform Graham-Scan
+    for i in range(2, len(sorted_Q)):
+        while angle(hull[-2], hull[-1], sorted_Q[i]) < 180:
+            hull.pop()
+        hull.append(sorted_Q[i])
+
+    return hull
+
 def intersection_line_circle(line, circle):
     R = circle.radius
     center = circle.center
