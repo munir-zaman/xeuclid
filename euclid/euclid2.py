@@ -608,37 +608,16 @@ class Polygon(GObject):
             returns: list of np.ndarray
         """
         vertices = self.vertices[::]
-        vertices_x = []
-        vertices_y = []
-        vertices_ = []
 
-        for p in vertices:
-            vertices_.append((p[0,0], p[1,0]))
-            vertices_x.append(p[0,0])
-            vertices_y.append(p[1,0])
+        max_px = max(vertices, key=lambda p: p[0,0])
+        min_px = min(vertices, key=lambda p: p[0,0])
+        max_py = max(vertices, key=lambda p: p[1,0])
+        min_py = min(vertices, key=lambda p: p[1,0])
 
-        x_max, x_min = max(vertices_x), min(vertices_x)
-        y_max, y_min = max(vertices_y), min(vertices_y)
-
-        max_px = None
-        min_px = None
-        max_py = None
-        min_py = None
-
-        for q in vertices_:
-            if q[0] == x_max:
-                max_px = q
-            if q[0] == x_min:
-                min_px = q
-            if q[1] == y_max:
-                max_py = q
-            if q[1] == y_min:
-                min_py = q
-
-        down_line = y_axis.perpendicular_line(col_vector(min_py))
-        up_line = y_axis.perpendicular_line(col_vector(max_py))
-        left_line = x_axis.perpendicular_line(col_vector(min_px))
-        right_line = x_axis.perpendicular_line(col_vector(max_px))
+        down_line = y_axis.perpendicular_line(min_py)
+        up_line = y_axis.perpendicular_line(max_py)
+        left_line = x_axis.perpendicular_line(min_px)
+        right_line = x_axis.perpendicular_line(max_px)
 
         A, B, C, D = down_line & left_line, down_line & right_line, right_line & up_line, left_line & up_line
 
@@ -660,7 +639,7 @@ def convex_hull(*points):
     hull = [P, sorted_Q[0], sorted_Q[1]]
     # perform Graham-Scan
     for i in range(2, len(sorted_Q)):
-        while angle(hull[-2], hull[-1], sorted_Q[i]) < 180:
+        while np.cross(row_vector(hull[-2] - hull[-1]), row_vector(sorted_Q[i] - hull[-1])) > 0:
             hull.pop()
         hull.append(sorted_Q[i])
 
