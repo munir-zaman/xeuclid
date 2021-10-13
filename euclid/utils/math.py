@@ -93,7 +93,7 @@ def system(A,B):
         B : np.ndarray
 
         returns 
-            out :
+            out : None or np.ndarray
     """
     if np.linalg.det(A)!=0:
         out=np.linalg.solve(A, B)
@@ -133,3 +133,25 @@ def mid(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
         raise ValueError("`p1` and `p2` must have the same shape")
 
     return (p1 + p2)/2
+
+_CHOOSE_CACHE = {}
+
+def choose(n: int, k: int, save=True) -> int:
+    """ returns the value of n - choose - k = n(n-1)(n-2)...(n-k+1)/k! 
+        if `save` is set to `True` then the `out` value will be saved to `_CHOOSE_CACHE`
+    """
+    if k>n:
+        raise ArithmeticError("`k` should be less than or equal to `n`.")
+
+    if (n,k) not in _CHOOSE_CACHE.keys():
+        X = 1
+        for i in range(0, k):
+            X*=(n-i)
+        out = X/mth.factorial(k)
+
+        if save:
+            _CHOOSE_CACHE.update({(n,k): out})
+
+    else:
+        out = _CHOOSE_CACHE[(n,k)]
+    return out
