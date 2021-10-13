@@ -26,7 +26,7 @@ class BezierCurve:
         self.hull = convex_hull(self.controls)
 
     def __call__(self, t):
-        return sum([bernstein_poly_func(self.degree, i, self.interval)(t) * self.controls[i] for i in range(0, self.degree + 1)])
+        return sum([bernstein_poly_func(self.degree, i, interval=self.interval)(t) * self.controls[i] for i in range(0, self.degree + 1)])
 
 
 class QuadBezier(BezierCurve):
