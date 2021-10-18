@@ -199,6 +199,13 @@ class Line(GObject):
 
         return x
 
+    def __eq__(self, line):
+        out = False
+        if self | line:
+            A, B = self.A, self.B
+            out = (A in line) and (B in line)
+        return out
+
     def __add__(self, vector):
         return Line(self.A+vector, self.B+vector)
 
@@ -423,6 +430,14 @@ class Segment(GObject):
 
         return out
 
+    def __eq__(self, segment):
+        out = False
+        if self.line == segment.line:
+            A1, B1 = tuple(rnd(row_vector(self.A))), tuple(rnd(row_vector(self.B)))
+            A2, B2 = tuple(rnd(row_vector(segment.A))), tuple(rnd(row_vector(segment.B)))
+            out = ({A1, B1} == {A2, B2})
+        return out
+
     def __add__(self,vector):
         return Segment(self.A+vector, self.B+vector)
 
@@ -457,6 +472,9 @@ class Segment(GObject):
             out=None
 
         return out
+
+    def __and__(self, obj):
+        return self.intersection(obj)
 
     def rotate(self, point, angle):
         A_, B_= rotate(self.A, point, angle), rotate(self.B, point, angle)
@@ -496,6 +514,12 @@ class Ray(GObject):
 
         return out
 
+    def __eq__(self, ray):
+        out = False
+        if self.line == self.ray:
+            out = np.isclose(self.A, ray.A, rtol=0)
+        return out
+
     def __add__(self,vector):
         return Ray(self.A+vector, self.B+vector)
 
@@ -530,6 +554,9 @@ class Ray(GObject):
             out=None
 
         return out
+
+    def __and__(self, obj):
+        return self.intersection(obj)
 
     def rotate(self, point, angle):
         A_,B_=rotate(self.A, point, angle), rotate(self.B, point, angle)
