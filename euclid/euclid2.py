@@ -630,8 +630,8 @@ def intersection_circle_poly(circle, poly):
         for i in range(0, len(verts)-1):
             edge = Segment(verts[i], verts[i+1])
             intersection = circle & edge
-            if not intersection is None:
-                out.append(intersection)
+            if (not intersection is None) and (not intersection==[]):
+                out += intersection
     return out
 
 def intersection_poly_poly(poly1, poly2):
