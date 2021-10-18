@@ -242,6 +242,8 @@ class Line(GObject):
             out=intersection_line_ray(self, obj)
         elif obj.type=="circle":
             out=intersection_line_circle(self, obj)
+        elif obj.type=="polygon":
+            out=intersection_line_poly(self, obj)
         else:
             out=None
 
@@ -471,6 +473,8 @@ class Segment(GObject):
             out=intersection_segment_ray(self, obj)
         elif obj.type=="circle":
             out=intersection_ray_circle(self, obj)
+        elif obj.type=="polygon":
+            out=intersection_segment_poly(self, obj)
         else:
             out=None
 
@@ -553,6 +557,8 @@ class Ray(GObject):
             out=intersection_ray_ray(self, obj)
         elif obj.type=="circle":
             out=intersection_segment_circle(self, obj)
+        elif obj.type=="polygon":
+            out=intersection_ray_poly(self, obj)
         else:
             out=None
 
@@ -567,7 +573,7 @@ class Ray(GObject):
 
 
 def intersection_line_poly(line, poly):
-    A, B, C, D = poly.bbox
+    A, B, C, D = poly.bbox[::]
     AB = Segment(A, B)
     BC = Segment(B, C)
     CD = Segment(C, D)
@@ -603,7 +609,7 @@ def intersection_ray_poly(ray, poly):
     return out
 
 def intersection_circle_poly(circle, poly):
-    A, B, C, D = poly.bbox
+    A, B, C, D = poly.bbox[::]
     AB = Segment(A, B)
     BC = Segment(B, C)
     CD = Segment(C, D)
@@ -626,6 +632,40 @@ def intersection_circle_poly(circle, poly):
             intersection = circle & edge
             if not intersection is None:
                 out.append(intersection)
+    return out
+
+def intersection_poly_poly(poly1, poly2):
+    bbox1 = poly1.bbox[::]
+    bbox2 = poly2.bbox[::]
+
+    bbox1.append(poly1.bbox[0])
+    bbox2.append(poly2.bbox[0])
+
+    bbox_int = False
+    for i in range(0, len(bbox1) - 1):
+        seg1 = Segment(bbox1[i], bbox1[i+1])
+        for j in range(0, len(bbox2) - 1):
+            seg2 = Segment(bbox2[j], bbox2[j+1])
+            if not (seg1 & seg2) is None:
+                bbox_int = True
+                break
+    out = []
+
+    verts1= poly1.vertices[::]
+    verts2= poly2.vertices[::]
+
+    verts1.append(poly1.vertices[0])
+    verts2.append(poly2.vertices[0])
+
+    if bbox_int:
+        for r in range(0, len(verts1) - 1):
+            edge1 = Segment(verts1[r], verts1[r+1])
+            for s in range(0, len(verts2) - 1):
+                edge2 = Segment(verts2[s], verts2[s+1])
+                ints = (edge1 & edge2)
+                if not ints is None:
+                    out.append(ints)
+
     return out
 
 
@@ -692,6 +732,8 @@ class Polygon(GObject):
             out=intersection_ray_poly(obj, self)
         elif obj.type=="circle":
             out=intersection_circle_poly(obj, self)
+        elif obj.type=="polygon":
+            out=intersection_poly_poly(self, obj)
         else:
             out=None
 
