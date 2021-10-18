@@ -628,7 +628,7 @@ def intersection_circle_poly(circle, poly):
                 out.append(intersection)
     return out
 
-    
+
 class Polygon(GObject):
 
     def __init__(self,*vertices):
@@ -682,6 +682,23 @@ class Polygon(GObject):
     def rotate(self, point, angle):
         vertices=[rotate(p, point, angle) for p in self.vertices]
         return Polygon(vertices)
+
+    def intersection(self,obj):
+        if obj.type=="line":
+            out=intersection_line_poly(obj, self)
+        elif obj.type=="segment":
+            out=intersection_segment_poly(obj, self)
+        elif obj.type=="ray":
+            out=intersection_ray_poly(obj, self)
+        elif obj.type=="circle":
+            out=intersection_circle_poly(obj, self)
+        else:
+            out=None
+
+        return out
+
+    def __and__(self, obj):
+        return self.intersection(obj)
 
 
 def convex_hull(*points):
