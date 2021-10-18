@@ -1,6 +1,9 @@
 from euclid.utils.math import *
 
 
+to_tuple = lambda vector: tuple(row_vector(vector))
+
+
 class GObject(object):
     """ base class for geometric objects """
     def __init__(self):
@@ -599,7 +602,33 @@ def intersection_ray_poly(ray, poly):
     out = [point for point in ints_ if (point in ray)]
     return out
 
+def intersection_circle_poly(circle, poly):
+    A, B, C, D = poly.bbox
+    AB = Segment(A, B)
+    BC = Segment(B, C)
+    CD = Segment(C, D)
+    DA = Segment(D, A)
 
+    # first check if circle intersects the bounding box of the polygon
+    bbox_int = False
+    for segment in [AB, BC, CD, DA]:
+        if not (circle & segment) is None:
+            bbox_int = True
+            break
+    out = []
+    if bbox_int:
+        # calc intersection
+        verts = poly.vertices[::]
+        verts.append(poly.vertices[0])
+
+        for i in range(0, len(verts)-1):
+            edge = Segment(verts[i], verts[i+1])
+            intersection = circle & edge
+            if not intersection is None:
+                out.append(intersection)
+    return out
+
+    
 class Polygon(GObject):
 
     def __init__(self,*vertices):
