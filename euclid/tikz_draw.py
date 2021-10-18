@@ -217,7 +217,32 @@ class Tikz():
         Config=f"[{fill_config}]" if (not isnone(fill_config) and fill_config!="") else ""
 
         draw_path_code=f"\\fill{Config}  "+path_string
-        self.write(draw_path_code)        
+        self.write(draw_path_code)
+
+    def mark_segment(self, start, end, ticks=2, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=def_path_config):
+        A = start
+        B = end
+        l = Line(A, B)
+        m = tick_pos if not (tick_pos is None) else dist(A, mid(A, B))
+
+        for i in range(0, ticks):
+            T = m - ((ticks-1)*tick_dist)/2 + i*tick_dist
+            Point = l.normt(T)
+            Theta = atan2(T, tick_len/2)
+            tick_A = rotate(Point, A, Theta)
+            tick_B = rotate(Point, A, -Theta)
+            self.draw_path(tick_A, tick_B, config=tick_config)
+
+    def draw_segment(self, segment, ticks=0, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=def_path_config, end_points=False, end_point_config=def_point_config):
+        start, end = segment.A, segment.B
+        self.draw_path(start, end)
+        self.mark_segment(start, end, ticks=ticks, tick_len=tick_len, tick_dist=tick_dist, tick_pos=tick_pos, tick_config=tick_config)
+        if end_points:
+            self.draw_points(start, end, config=end_point_config)
+
+    def draw_segments(self, *segments):
+        for segment in segments:
+            self.draw_segment(segment)
 
     def draw_points(self, *points, config=def_point_config, radius=2):
         for point in points:
