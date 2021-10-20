@@ -112,15 +112,19 @@ class Tikz():
     def pdf(self):
         os.system(f'{pdflatex_command} {self.file_name}')
 
-    def png(self,dpi=500, pdf=True, clean=True):
-        if pdf or (self.file_name.replace(".tex", ".pdf") not in os.listdir()):
+    def png(self,dpi=500, pdf=True, clean=True, out_path=None):
+        if pdf or ((self.file_name.replace(".tex", ".pdf") not in os.listdir())):
             self.pdf()
-        out_path = os.getcwd() + "\\" + self.file_name.replace(".tex", "_images") + "\\"
+
+        def_out_path = os.getcwd() + "\\" + self.file_name.replace(".tex", "_images") + "\\"
+        out_path = out_path if not out_path is None  else def_out_path
         file_path = os.getcwd() + "\\" + self.file_name.replace(".tex", ".pdf")
+
         try:
             os.mkdir(out_path)
         except FileExistsError:
             pass
+            
         convert_pdf(file_path, dpi=dpi, out_path=out_path)
         if clean:
             clean_latex()
