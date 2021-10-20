@@ -1,4 +1,5 @@
 import os
+import shutil
 
 def create_file(file_name):
     """ creates the file `file_name` """
@@ -19,6 +20,8 @@ def readlines_file(file_name):
         out = file.readlines()
     return out
 
+def move_file(file_path, target_dir):
+    shutil.move(file_path, target_dir)
 
 class File():
 
