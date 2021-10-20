@@ -110,7 +110,7 @@ class Tikz():
         self.write('\\end{'+env+'}')
 
     def pdf(self):
-        os.system(f'{pdflatex_command} {self.file_name}')
+        os.system(f'{pdflatex_command} -interaction=batchmode {self.file_name}')
 
     def png(self,dpi=500, pdf=True, clean=True, out_path=None):
         if pdf or ((self.file_name.replace(".tex", ".pdf") not in os.listdir())):
@@ -334,7 +334,7 @@ class Tikz():
 
         self.write(ray_draw_code)
 
-    def draw_angle(self, A, B, C, config=def_arc_config, radius=0.5, fill_config=def_arc_fill_config, right_angle=True, arcs=1, arc_dist=0.075, ticks=0, tick_dtheta=None, tick_len=0.2, tick_config=def_arc_tick_config):
+    def draw_angle(self, A, B, C, config=def_arc_config, radius=0.5, fill_config=def_arc_fill_config, right_angle=True, arcs=1, arc_dist=0.075, ticks=0, tick_dtheta=None, tick_len=0.2, tick_config=def_arc_tick_config, no_fill=False):
         
         Angle=angle(A, B, C)
         Bx, By=RND8(row_vector(B))
@@ -350,7 +350,8 @@ class Tikz():
 
         if (not right_angle) or (not isclose(Angle, 90)):
             draw_angle_code=f"\\draw{draw_Config}  ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}];"
-            fill_angle_code=f"\\fill{fill_Config} {Bx,By} -- ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
+            if not no_fill:
+                fill_angle_code=f"\\fill{fill_Config} {Bx,By} -- ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
             
             n_arc = arcs
             d_arc = arc_dist
@@ -369,11 +370,13 @@ class Tikz():
 
         else:
             draw_angle_code=f"\\draw{draw_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
-            fill_angle_code=f"\\fill{fill_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
+            if not no_fill:
+                fill_angle_code=f"\\fill{fill_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
             arc_code=""
             tick_code=""
-
-        self.write(fill_angle_code)
+            
+        if not no_fill:
+            self.write(fill_angle_code)
         self.write(draw_angle_code)
         self.write(arc_code)
         self.write(tick_code)
