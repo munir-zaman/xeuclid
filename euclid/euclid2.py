@@ -609,46 +609,18 @@ def intersection_ray_poly(ray, poly):
     return out
 
 def intersection_circle_poly(circle, poly):
-    A, B, C, D = poly.bbox[::]
-    AB = Segment(A, B)
-    BC = Segment(B, C)
-    CD = Segment(C, D)
-    DA = Segment(D, A)
+    verts = poly.vertices[::]
+    verts.append(poly.vertices[0])
 
-    # first check if circle intersects the bounding box of the polygon
-    bbox_int = False
-    for segment in [AB, BC, CD, DA]:
-        if not (circle & segment) is None:
-            bbox_int = True
-            break
-    out = []
-    if bbox_int:
-        # calc intersection
-        verts = poly.vertices[::]
-        verts.append(poly.vertices[0])
+    for i in range(0, len(verts)-1):
+        edge = Segment(verts[i], verts[i+1])
+        intersection = circle & edge
+        if (not intersection is None) and (not intersection==[]):
+            out += intersection
 
-        for i in range(0, len(verts)-1):
-            edge = Segment(verts[i], verts[i+1])
-            intersection = circle & edge
-            if (not intersection is None) and (not intersection==[]):
-                out += intersection
     return out
 
 def intersection_poly_poly(poly1, poly2):
-    bbox1 = poly1.bbox[::]
-    bbox2 = poly2.bbox[::]
-
-    bbox1.append(poly1.bbox[0])
-    bbox2.append(poly2.bbox[0])
-
-    bbox_int = False
-    for i in range(0, len(bbox1) - 1):
-        seg1 = Segment(bbox1[i], bbox1[i+1])
-        for j in range(0, len(bbox2) - 1):
-            seg2 = Segment(bbox2[j], bbox2[j+1])
-            if not (seg1 & seg2) is None:
-                bbox_int = True
-                break
     out = []
 
     verts1= poly1.vertices[::]
@@ -657,14 +629,13 @@ def intersection_poly_poly(poly1, poly2):
     verts1.append(poly1.vertices[0])
     verts2.append(poly2.vertices[0])
 
-    if bbox_int:
-        for r in range(0, len(verts1) - 1):
-            edge1 = Segment(verts1[r], verts1[r+1])
-            for s in range(0, len(verts2) - 1):
-                edge2 = Segment(verts2[s], verts2[s+1])
-                ints = (edge1 & edge2)
-                if not ints is None:
-                    out.append(ints)
+    for r in range(0, len(verts1) - 1):
+        edge1 = Segment(verts1[r], verts1[r+1])
+        for s in range(0, len(verts2) - 1):
+            edge2 = Segment(verts2[s], verts2[s+1])
+            ints = (edge1 & edge2)
+            if not ints is None:
+                out.append(ints)
 
     return out
 
@@ -675,8 +646,14 @@ class Polygon(GObject):
 
         self.vertices=list(vertices)
         self.type="polygon"
-        self.area = self.get_area()
-        self.bbox = self.get_bbox()
+
+    @property
+    def area(self):
+        return self.get_area()
+
+    @property
+    def bbox(self):
+        return self.get_bbox()
 
     def isinside(self, point) -> bool:
         """ returns True if point is inside the polygon
