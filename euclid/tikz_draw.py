@@ -425,6 +425,26 @@ class Tikz():
         
         self.write(node_code)
 
+    def smooth_plot_from_file(self, file_path, config=def_line_config, plot_config=""):
+
+        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        plot_Config=f"{plot_config}," if (not isnone(plot_config) and plot_config!="") else ""
+
+        code = f"\\draw{Config} plot[{plot_Config} smooth] file " + "{"+ file_path.replace("\\","/") +"};"
+        self.write(code)
+
+    def smooth_plot_from_points(self, points, config=def_line_config, plot_config=""):
+
+        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        plot_Config=f"{plot_config}," if (not isnone(plot_config) and plot_config!="") else ""
+
+        points_string=""
+        for point in points:
+            points_string += str(tuple(point)) + " "
+
+        code = f"\\draw{Config} plot[{plot_Config} smooth] " + "{"+ points_string +"};"
+        self.write(code)
+
     def get_texcode(self):
         file_name = self.file_name
         file_content = File(file_name).readlines()
