@@ -3,6 +3,7 @@ from euclid.euclid2 import *
 from euclid.utils.file_edit import *
 from euclid.utils.math import *
 from pdf2image import convert_from_path, convert_from_bytes
+import PIL
 
 
 RND8=np.vectorize(lambda x: round(x, 8))
@@ -16,6 +17,22 @@ def convert_pdf(path, file_type="png", dpi=600, out_path=None, name="page"):
         out_path = os.getcwd()
     convert_from_path(str(path), dpi=dpi, output_folder=out_path, fmt=file_type, output_file=name)
     print(f"pdf2image file output path: \n{out_path}")
+
+def resize_image(image_path, out_path, res=(1080, 1080)):
+    img = PIL.Image.open(image_path)
+
+    if type(res) == float or type(res) == int:
+        RES = (mth.floor(img.size[0]*res), mth.floor(img.size[1]*res))
+    else:
+        RES = res
+
+    if type(res) != float and type(res) != int and type(res) != tuple:
+        raise ValueError("`res` should be an number(int/float) or a tuple of length 2")
+
+    img_ = img.resize(RES)
+    img_.save(out_path)
+    del img_
+    del img
 
 
 def_preamble="""%tikz_draw
@@ -112,7 +129,7 @@ class Tikz():
     def pdf(self):
         os.system(f'{pdflatex_command} -interaction=batchmode {self.file_name}')
 
-    def png(self,dpi=500, pdf=True, clean=True, out_path=None):
+    def png(self,dpi=500, pdf=True, clean=True, out_path=None, res=None):
         if pdf or ((self.file_name.replace(".tex", ".pdf") not in os.listdir())):
             self.pdf()
 
@@ -128,6 +145,13 @@ class Tikz():
         convert_pdf(file_path, dpi=dpi, out_path=out_path)
         if clean:
             clean_latex()
+
+        if not res is None:
+            for images in os.listdir(out_path):
+                if images.startswith("page") and images.endswith(".png"):
+                    path = os.path.join(out_path, images)
+                    resize_image(path, path, res=res)
+            print(f"resized {len(os.listdir(out_path))} images")
 
     def svg(self, clean=True):
         latex_ = f"latex {self.file_name}"
