@@ -425,7 +425,7 @@ class Tikz():
         
         self.write(node_code)
 
-    def smooth_plot_from_file(self, file_path, config=def_line_config, plot_config=""):
+    def smooth_plot_from_file(self, file_path, config=def_path_config, plot_config=""):
 
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         plot_Config=f"{plot_config}," if (not isnone(plot_config) and plot_config!="") else ""
@@ -433,7 +433,7 @@ class Tikz():
         code = f"\\draw{Config} plot[{plot_Config} smooth] file " + "{"+ file_path.replace("\\","/") +"};"
         self.write(code)
 
-    def smooth_plot_from_points(self, points, config=def_line_config, plot_config=""):
+    def smooth_plot_from_points(self, points, config=def_path_config, plot_config=""):
 
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         plot_Config=f"{plot_config}," if (not isnone(plot_config) and plot_config!="") else ""
@@ -444,6 +444,15 @@ class Tikz():
 
         code = f"\\draw{Config} plot[{plot_Config} smooth] " + "{"+ points_string +"};"
         self.write(code)
+
+    def draw_lagrange_polynomial_from_table(self, points, table_name, x_range=[-10, 10], samples=100, config=def_path_config, plot_config=""):
+        func = get_lagrange_polynomial_as_func(points)
+
+        for x in np.linspace(x_range[0], x_range[1], samples):
+            with open(table_name, "a") as file:
+                file.write(f"{x} {func(x)} \n")
+
+        self.smooth_plot_from_file(table_name, config=config, plot_config=plot_config)
 
     def get_texcode(self):
         file_name = self.file_name

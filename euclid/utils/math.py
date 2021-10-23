@@ -1,5 +1,7 @@
 import math as mth
 import numpy as np
+import scipy.interpolate
+
 
 def isnone(obj):
     return str(type(obj))=="<class 'NoneType'>"
@@ -155,3 +157,10 @@ def choose(n: int, k: int, save=True) -> int:
     else:
         out = _CHOOSE_CACHE[(n,k)]
     return out
+
+
+def get_lagrange_polynomial_as_func(points):
+    X = [point[0] for point in points]
+    Y = [point[1] for point in points]
+
+    return (lambda x: scipy.interpolate.lagrange(X, Y)(x))
