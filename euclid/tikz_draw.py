@@ -210,12 +210,23 @@ class Tikz():
         self.write(draw_point_code)
 
     def draw_vector(self,vector,start=origin, config=tikz_config.vector_config, arrow_tip=tikz_config.arrow_tip):
+        """ draws the vector `vector` with tail at `start` 
+            If the `vector` contains `NaN`/`None` nothing will be drawn.
+
+            vector: np.array([[x], [y]])
+         """
         X,Y=row_vector(vector)
         X,Y=round(X, 8),round(Y, 8)
 
-        Config=f"[{config},{arrow_tip}]" if (not (config in None) and config.strip()!="") else f"[{Tip}]"
-        code=f"%vector [{X}, {Y}]\n\\draw{Config} {(start[0,0], start[1,0])} -- {str((X + start[0,0], Y + start[1,0]))};"
-        self.write(code)
+        if (not np.isnan(vector).any()) or (X!=0 and Y!=0):
+            Config=f"[{config},{arrow_tip}]" if (not (config is None) and config.strip()!="") else f"[{Tip}]"
+            code=f"%vector [{X}, {Y}]\n\\draw{Config} {(start[0,0], start[1,0])} -- {str((X + start[0,0], Y + start[1,0]))};"
+            self.write(code)
+
+        elif (X==0 and Y==0):
+            self.draw_point(start, config=config)
+        else:
+            print("WARNING: Invalid value encountered.")
 
     def draw_path(self,*points, config=tikz_config.path_config, cycle=False):
         points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
@@ -451,6 +462,33 @@ class Tikz():
                 file.write(f"{x} {func(x)} \n")
 
         self.smooth_plot_from_file(table_name, config=config, plot_config=plot_config)
+
+    def draw_vector_field_from_func(self, func, x_range=[-10, 10], y_range=[-10, 10], grad=("red", "blue"), grad_range=(0, 100), config=tikz_config.path_config, len_range=(0, 1), arrow_tip=tikz_config.arrow_tip):
+        points=[]
+        for x in range(x_range[0], x_range[1] + 1):
+            for y in range(y_range[0], y_range[1] + 1):
+                points.append(col_vector([x, y]))
+
+        vectors_ = [func(point) for point in points if not np.isnan(func(point)).any()]
+        length = lambda vector: dist(col_vector([0, 0]), vector)
+        maxR = length(max(vectors_, key = length))
+
+        def normalize(vector):
+            minL, maxL = len_range
+            vnorm = norm(vector)
+            V = mth.sqrt( (maxL - minL)*length(vector)/maxR + minL ) * vnorm
+            return V
+
+        def get_grad_value(vector):
+            minG, maxG = grad_range
+            n = (maxG - minG)*length(vector)/maxR + minG
+            return n
+
+        for p in points:
+            V = func(p)
+            grad_code = f"{grad[1]}!{get_grad_value(V)}!{grad[0]}"
+            Config = f"{grad_code}, {config}" if (not (config is None) and config.strip() != "") else f"{grad_code}"
+            self.draw_vector(normalize(V), start=p, config=Config, arrow_tip=arrow_tip)
 
     def get_texcode(self):
         file_name = self.file_name

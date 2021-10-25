@@ -29,13 +29,13 @@ standalone="""%tikz_draw
 
 point_config = "fill=cyan!20!black, draw=black"
 line_config = "{Stealth[round]}-{Stealth[round]}, thick"
-ray_config = "-{Stealth[round]}"
+ray_config = "-{Stealth[round]}, line cap=round"
 
-path_config = "thick"
+path_config = "thick, line cap=round"
 path_fill_config="opacity=0.3"
 path_fill_color = "DeepSkyBlue"
 
-vector_config = "-{Stealth[round]}, thick"
+vector_config = "-{Stealth[round]}, thick, line cap=round"
 circle_config = "RoyalBlue, thick"
 grid_config="LightSteelBlue, dashed"
 
