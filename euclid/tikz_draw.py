@@ -4,7 +4,7 @@ from euclid.utils.file_edit import *
 from euclid.utils.math import *
 from pdf2image import convert_from_path, convert_from_bytes
 import PIL
-
+import euclid.tikz_config as tikz_config 
 
 RND8=np.vectorize(lambda x: round(x, 8))
 
@@ -43,6 +43,7 @@ def_preamble="""%tikz_draw
 \\usepackage{amsfonts}
 \\usepackage{amssymb}
 \\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\\usepackage[svgnames]{xcolor}
 \\usepackage{tikz}
 %tikzlibrary
 \\usetikzlibrary{arrows.meta}
@@ -56,6 +57,7 @@ standalone="""%tikz_draw
 \\usepackage{amsmath}
 \\usepackage{amsfonts}
 \\usepackage{amssymb}
+\\usepackage[svgnames]{xcolor}
 %tikzlibrary
 \\usetikzlibrary{arrows.meta}
 %standalone preamble
@@ -84,7 +86,7 @@ def_circle_config="cyan!20!black"
 
 
 class Tikz():
-    def __init__(self,file_name, preamble=def_preamble):
+    def __init__(self,file_name, preamble=tikz_config.default_preamble):
         if not file_name is None:
             try:
                 create_file(file_name)
@@ -120,7 +122,7 @@ class Tikz():
         os.system(f'{editor} {self.file_name}')
 
     def begin(self,env,config=None):
-        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
         self.write('\\begin{'+env+'}'+f"{Config}"+'\n')
 
     def end(self,env):
@@ -141,7 +143,7 @@ class Tikz():
             os.mkdir(out_path)
         except FileExistsError:
             pass
-            
+
         convert_pdf(file_path, dpi=dpi, out_path=out_path)
         if clean:
             clean_latex()
@@ -169,11 +171,11 @@ class Tikz():
         clip_code=f"\\clip {str((xmin, ymin))} rectangle {str((xmax, ymax))};"
         self.write(clip_code)
 
-    def draw_axis(self, x_range=[-5,5], y_range=[-5,5], arrow_tip=def_axis_arrow_tip ,tick_labels=False):
+    def draw_axis(self, x_range=[-5,5], y_range=[-5,5], arrow_tip=tikz_config.axis_arrow_tip ,tick_labels=False):
         xmin,xmax=x_range
         ymin,ymax=y_range
 
-        Tip=f"[{arrow_tip}]" if (not isnone(arrow_tip) and arrow_tip!="") else ""
+        Tip=f"[{arrow_tip}]" if (not (arrow_tip is None) and arrow_tip.strip()!="") else ""
 
         axis_code=f"""
     %axis
@@ -191,63 +193,59 @@ class Tikz():
         code=axis_code+axis_ticks_code
         self.write(code)
 
-    def draw_grid(self, x_range=[-5,5], y_range=[-5,5], config=def_grid_config):
+    def draw_grid(self, x_range=[-5,5], y_range=[-5,5], config=tikz_config.grid_config):
         xmin,xmax=x_range
         ymin,ymax=y_range
 
-        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
         grid_code=f"\\draw{Config} {str((xmin,ymin))} grid {str((xmax,ymax))};"
         self.write(grid_code)
 
-    def draw_point(self, point, config=def_point_config, radius=2):
+    def draw_point(self, point, config=tikz_config.point_config, radius=2):
         X,Y=row_vector(point)
         X,Y=round(X, 8),round(Y, 8)
 
-        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
         draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius}pt);"
         self.write(draw_point_code)
 
-    def draw_vector(self,vector,start=origin, config=def_vector_config, arrow_tip=def_arrow_tip):
+    def draw_vector(self,vector,start=origin, config=tikz_config.vector_config, arrow_tip=tikz_config.arrow_tip):
         X,Y=row_vector(vector)
         X,Y=round(X, 8),round(Y, 8)
 
-        Config=f"[{config},{arrow_tip}]" if (not isnone(config) and config!="") else f"[{Tip}]"
-        code=f"""
-    %vector [{X}, {Y}]
-    \\draw{Config} {(start[0,0], start[1,0])} -- {str((X,Y))};
-    """
-    
+        Config=f"[{config},{arrow_tip}]" if (not (config in None) and config.strip()!="") else f"[{Tip}]"
+        code=f"%vector [{X}, {Y}]\n\\draw{Config} {(start[0,0], start[1,0])} -- {str((X + start[0,0], Y + start[1,0]))};"
         self.write(code)
 
-    def draw_path(self,*points, config=def_path_config, cycle=False):
+    def draw_path(self,*points, config=tikz_config.path_config, cycle=False):
         points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
 
         for i in range(0,len(points_xy)-1):
             path_string=path_string+f"{str(points_xy[i])} -- "
 
-        path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;" 
+        path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;"
 
-        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
 
         draw_path_code=f"\\draw{Config}  "+path_string
         self.write(draw_path_code)
 
-    def fill_path(self, *points, fill_config=def_path_fill_config, cycle=False):
+    def fill_path(self, *points, fill_config=tikz_config.path_fill_config, cycle=False, fill_color=tikz_config.path_fill_color):
         points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
 
         for i in range(0,len(points_xy)-1):
             path_string=path_string+f"{str(points_xy[i])} -- "
 
-        path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;" 
+        path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;"
 
-        Config=f"[{fill_config}]" if (not isnone(fill_config) and fill_config!="") else ""
+        Config=f"[{fill_config},{fill_color}]" if (not (fill_config is None) and fill_config.strip()!="") else f"{fill_color}"
 
-        draw_path_code=f"\\fill{Config}  "+path_string
-        self.write(draw_path_code)
+        fill_path_code=f"\\fill{Config}  "+path_string
+        self.write(fill_path_code)
 
-    def mark_segment(self, start, end, ticks=2, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=def_path_config):
+    def mark_segment(self, start, end, ticks=2, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=tikz_config.path_config):
         A = start
         B = end
         l = Line(A, B)
@@ -261,7 +259,7 @@ class Tikz():
             tick_B = rotate(Point, A, -Theta)
             self.draw_path(tick_A, tick_B, config=tick_config)
 
-    def draw_segment(self, segment, ticks=0, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=def_path_config, end_points=False, end_point_config=def_point_config):
+    def draw_segment(self, segment, ticks=0, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=tikz_config.path_config, end_points=False, end_point_config=tikz_config.point_config):
         start, end = segment.A, segment.B
         self.draw_path(start, end)
         self.mark_segment(start, end, ticks=ticks, tick_len=tick_len, tick_dist=tick_dist, tick_pos=tick_pos, tick_config=tick_config)
@@ -272,14 +270,14 @@ class Tikz():
         for segment in segments:
             self.draw_segment(segment)
 
-    def draw_points(self, *points, config=def_point_config, radius=2):
+    def draw_points(self, *points, config=tikz_config.point_config, radius=2):
         for point in points:
             self.draw_point(point, config=config, radius=radius)
 
-    def draw_line(self, line, config=def_line_config, x_range=[-5,5], y_range=[-5, 5]):
+    def draw_line(self, line, config=tikz_config.line_config, x_range=[-5,5], y_range=[-5, 5]):
         xmin, xmax=x_range
         ymin, ymax=y_range
-        
+
         A=col_vector([xmin, ymin])
         B=col_vector([xmax, ymin])
         C=col_vector([xmax, ymax])
@@ -313,21 +311,21 @@ class Tikz():
 
         p1=tuple(RND8(row_vector(p1)))
         p2=tuple(RND8(row_vector(p2)))
-        
-        draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+
+        draw_Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
         line_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(line_draw_code)
 
-    def draw_lines(self, *lines, config=def_line_config, x_range=[-5,5], y_range=[-5,5]):
+    def draw_lines(self, *lines, config=tikz_config.line_config, x_range=[-5,5], y_range=[-5,5]):
         for line in lines:
             self.draw_line(line, config=config, x_range=x_range, y_range=y_range)
 
-    def draw_ray(self, ray, config=def_ray_config, x_range=[-5,5], y_range=[-5, 5]):
+    def draw_ray(self, ray, config=tikz_config.ray_config, x_range=[-5,5], y_range=[-5, 5]):
         #ray.A cannot be outside given x y range
         xmin, xmax=x_range
         ymin, ymax=y_range
-        
+
         A=col_vector([xmin, ymin])
         B=col_vector([xmax, ymin])
         C=col_vector([xmax, ymax])
@@ -353,16 +351,16 @@ class Tikz():
         p1=tuple(RND8(row_vector(ray.A)))
         p2=tuple(RND8(row_vector(P)))
 
-        draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        draw_Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
         ray_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(ray_draw_code)
-
+#TODO: CONFIG CHANGE
     def draw_angle(self, A, B, C, config=def_arc_config, radius=0.5, fill_config=def_arc_fill_config, right_angle=True, arcs=1, arc_dist=0.075, ticks=0, tick_dtheta=None, tick_len=0.2, tick_config=def_arc_tick_config, no_fill=False):
-        
+
         Angle=angle(A, B, C)
         Bx, By=RND8(row_vector(B))
-        
+
         start_angle=atan2((A-B)[0,0], (A-B)[1,0])
         end_angle= start_angle + Angle
 
@@ -376,7 +374,7 @@ class Tikz():
             draw_angle_code=f"\\draw{draw_Config}  ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}];"
             if not no_fill:
                 fill_angle_code=f"\\fill{fill_Config} {Bx,By} -- ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
-            
+
             n_arc = arcs
             d_arc = arc_dist
             arc_code = ""
@@ -398,18 +396,18 @@ class Tikz():
                 fill_angle_code=f"\\fill{fill_Config} {Bx, By} -- ([shift=({end_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- ([shift=({(start_angle+Angle/2)%360}:{radius})]{Bx}, {By}) -- ([shift=({start_angle}:{radius/sqrt(2)})]{Bx}, {By}) -- cycle;"
             arc_code=""
             tick_code=""
-            
+
         if not no_fill:
             self.write(fill_angle_code)
         self.write(draw_angle_code)
         self.write(arc_code)
         self.write(tick_code)
 
-    def draw_circle(self, circle, config=def_circle_config):
+    def draw_circle(self, circle, config=tikz_config.circle_config):
         Cx, Cy= RND8(row_vector(circle.center))
         radius= round(circle.radius, 8)
 
-        draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
+        draw_Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
 
         draw_circle_code=f"\\draw{draw_Config} ({Cx}, {Cy}) circle ({radius});"
         self.write(draw_circle_code)
@@ -420,15 +418,15 @@ class Tikz():
 
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
         node_Config=f"[{node_config}]" if (not isnone(node_config) and node_config!="") else ""
-        
+
         node_code=f"\\draw{Config} {X,Y} node {node_Config} "+"{"+f"{text}"+"};"
-        
+
         self.write(node_code)
 
-    def smooth_plot_from_file(self, file_path, config=def_path_config, plot_config=""):
+    def smooth_plot_from_file(self, file_path, config=tikz_config.path_config, plot_config=""):
 
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
-        plot_Config=f"{plot_config}," if (not isnone(plot_config) and plot_config!="") else ""
+        plot_Config=f"{plot_config}," if (not (plot_config is None) and plot_config.strip()!="") else ""
 
         code = f"\\draw{Config} plot[{plot_Config} smooth] file " + "{"+ file_path.replace("\\","/") +"};"
         self.write(code)
@@ -436,7 +434,7 @@ class Tikz():
     def smooth_plot_from_points(self, points, config=def_path_config, plot_config=""):
 
         Config=f"[{config}]" if (not isnone(config) and config!="") else ""
-        plot_Config=f"{plot_config}," if (not isnone(plot_config) and plot_config!="") else ""
+        plot_Config=f"{plot_config}," if (not (plot_config is None) and plot_config.strip()!="") else ""
 
         points_string=""
         for point in points:
@@ -445,7 +443,7 @@ class Tikz():
         code = f"\\draw{Config} plot[{plot_Config} smooth] " + "{"+ points_string +"};"
         self.write(code)
 
-    def draw_lagrange_polynomial_from_table(self, points, table_name, x_range=[-10, 10], samples=100, config=def_path_config, plot_config=""):
+    def draw_lagrange_polynomial_from_table(self, points, table_name, x_range=[-10, 10], samples=100, config=tikz_config.path_config, plot_config=""):
         func = get_lagrange_polynomial_as_func(points)
 
         for x in np.linspace(x_range[0], x_range[1], samples):
