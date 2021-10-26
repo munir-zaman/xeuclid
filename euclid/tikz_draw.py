@@ -51,13 +51,12 @@ def_preamble="""%tikz_draw
 
 """
 standalone="""%tikz_draw
-\\documentclass[tikz, border=5]{standalone}
+\\documentclass[tikz, border=5, svgnames]{standalone}
 \\usepackage[utf8]{inputenc}
 \\usepackage[english]{babel}
 \\usepackage{amsmath}
 \\usepackage{amsfonts}
 \\usepackage{amssymb}
-\\usepackage[svgnames]{xcolor}
 %tikzlibrary
 \\usetikzlibrary{arrows.meta}
 %standalone preamble
