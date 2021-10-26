@@ -1,13 +1,12 @@
 
 default_preamble="""%tikz_draw
-\\documentclass[11pt,a4paper]{article}
+\\documentclass[11pt,a4paper, svgnames]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[english]{babel}
 \\usepackage{amsmath}
 \\usepackage{amsfonts}
 \\usepackage{amssymb}
 \\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
-\\usepackage[svgnames]{xcolor}
 \\usepackage{tikz}
 %tikzlibrary
 \\usetikzlibrary{arrows.meta}

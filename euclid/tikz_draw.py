@@ -34,16 +34,30 @@ def resize_image(image_path, out_path, res=(1080, 1080)):
     del img_
     del img
 
+def _is_nonempty_string(string):
+    """ returns True if `string` is a non-empty str """
+    out = False
+    if string is None:
+        out = False
+    else:
+        if type(string)==str:
+            if string.strip()=="":
+                out = False
+            else:
+                out = True
+        else:
+            out = False
+    return out
+
 
 def_preamble="""%tikz_draw
-\\documentclass[11pt,a4paper]{article}
+\\documentclass[11pt,a4paper, svgnames]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[english]{babel}
 \\usepackage{amsmath}
 \\usepackage{amsfonts}
 \\usepackage{amssymb}
 \\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
-\\usepackage[svgnames]{xcolor}
 \\usepackage{tikz}
 %tikzlibrary
 \\usetikzlibrary{arrows.meta}
@@ -121,14 +135,17 @@ class Tikz():
         os.system(f'{editor} {self.file_name}')
 
     def begin(self,env,config=None):
-        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
+        Config=f"[{config}]" if _is_nonempty_string(config) else ""
         self.write('\\begin{'+env+'}'+f"{Config}"+'\n')
 
     def end(self,env):
         self.write('\\end{'+env+'}')
 
-    def pdf(self):
-        os.system(f'{pdflatex_command} -interaction=batchmode {self.file_name}')
+    def pdf(self, shell_escape=False, batch=True):
+        shescape = " -shell-escape "
+        empty_string = " "
+        batch_string = " -interaction=batchmode"
+        os.system(f'pdflatex {batch_string if batch else empty_string}{shescape if shell_escape else empty_string}{self.file_name}')
 
     def png(self,dpi=500, pdf=True, clean=True, out_path=None, res=None):
         if pdf or ((self.file_name.replace(".tex", ".pdf") not in os.listdir())):
@@ -164,6 +181,12 @@ class Tikz():
         if clean:
             clean_latex()
 
+    def usepackage(self, package, config=None):
+        if not _is_nonempty_string(config):
+            self.write("\\usepackage{"+ package +"}")
+        else:
+            self.write("\\usepackage["+ config +"]{"+ package +"}")
+
     def clip(self, x_range=[-5,5], y_range=[-5,5]):
         xmin,xmax=x_range
         ymin,ymax=y_range
@@ -174,7 +197,7 @@ class Tikz():
         xmin,xmax=x_range
         ymin,ymax=y_range
 
-        Tip=f"[{arrow_tip}]" if (not (arrow_tip is None) and arrow_tip.strip()!="") else ""
+        Tip=f"[{arrow_tip}]" if _is_nonempty_string(arrow_tip) else ""
 
         axis_code=f"""
     %axis
@@ -196,7 +219,7 @@ class Tikz():
         xmin,xmax=x_range
         ymin,ymax=y_range
 
-        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
+        Config=f"[{config}]" if _is_nonempty_string(config) else ""
         grid_code=f"\\draw{Config} {str((xmin,ymin))} grid {str((xmax,ymax))};"
         self.write(grid_code)
 
@@ -204,7 +227,7 @@ class Tikz():
         X,Y=row_vector(point)
         X,Y=round(X, 8),round(Y, 8)
 
-        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
+        Config=f"[{config}]" if _is_nonempty_string(config) else ""
         draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius}pt);"
         self.write(draw_point_code)
 
@@ -218,7 +241,7 @@ class Tikz():
         X,Y=round(X, 8),round(Y, 8)
 
         if (not np.isnan(vector).any()) or (X!=0 and Y!=0):
-            Config=f"[{config},{arrow_tip}]" if (not (config is None) and config.strip()!="") else f"[{Tip}]"
+            Config=f"[{config},{arrow_tip}]" if _is_nonempty_string(config) else f"[{Tip}]"
             code=f"%vector [{X}, {Y}]\n\\draw{Config} {(start[0,0], start[1,0])} -- {str((X + start[0,0], Y + start[1,0]))};"
             self.write(code)
 
@@ -236,7 +259,7 @@ class Tikz():
 
         path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;"
 
-        Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
+        Config=f"[{config}]" if _is_nonempty_string(config) else ""
 
         draw_path_code=f"\\draw{Config}  "+path_string
         self.write(draw_path_code)
@@ -250,7 +273,7 @@ class Tikz():
 
         path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;"
 
-        Config=f"[{fill_config},{fill_color}]" if (not (fill_config is None) and fill_config.strip()!="") else f"{fill_color}"
+        Config=f"[{fill_config},{fill_color}]" if _is_nonempty_string(fill_config) else f"{fill_color}"
 
         fill_path_code=f"\\fill{Config}  "+path_string
         self.write(fill_path_code)
@@ -322,7 +345,7 @@ class Tikz():
         p1=tuple(RND8(row_vector(p1)))
         p2=tuple(RND8(row_vector(p2)))
 
-        draw_Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
+        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
         line_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(line_draw_code)
@@ -361,7 +384,7 @@ class Tikz():
         p1=tuple(RND8(row_vector(ray.A)))
         p2=tuple(RND8(row_vector(P)))
 
-        draw_Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
+        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
         ray_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(ray_draw_code)
@@ -376,9 +399,9 @@ class Tikz():
 
         Angle, start_angle, end_angle = round(Angle, 8), round(start_angle, 8), round(end_angle, 8)
 
-        draw_Config=f"[{config}]" if (not isnone(config) and config!="") else ""
-        fill_Config=f"[{fill_config}]" if (not isnone(fill_config) and fill_config!="") else ""
-        tick_Config=f"[{tick_config}]" if (not isnone(tick_config) and tick_config!="") else ""
+        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        fill_Config=f"[{fill_config}]" if _is_nonempty_string(fill_config) else ""
+        tick_Config=f"[{tick_config}]" if _is_nonempty_string(tick_config) else ""
 
         if (not right_angle) or (not isclose(Angle, 90)):
             draw_angle_code=f"\\draw{draw_Config}  ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}];"
@@ -417,7 +440,7 @@ class Tikz():
         Cx, Cy= RND8(row_vector(circle.center))
         radius= round(circle.radius, 8)
 
-        draw_Config=f"[{config}]" if (not (config is None) and config.strip()!="") else ""
+        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
 
         draw_circle_code=f"\\draw{draw_Config} ({Cx}, {Cy}) circle ({radius});"
         self.write(draw_circle_code)
@@ -426,8 +449,8 @@ class Tikz():
         X,Y=row_vector(position)
         X,Y=round(X, 8), round(Y, 8)
 
-        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
-        node_Config=f"[{node_config}]" if (not isnone(node_config) and node_config!="") else ""
+        Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        node_Config=f"[{node_config}]" if _is_nonempty_string(node_config) else ""
 
         node_code=f"\\draw{Config} {X,Y} node {node_Config} "+"{"+f"{text}"+"};"
 
@@ -435,16 +458,16 @@ class Tikz():
 
     def smooth_plot_from_file(self, file_path, config=tikz_config.path_config, plot_config=""):
 
-        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
-        plot_Config=f"{plot_config}," if (not (plot_config is None) and plot_config.strip()!="") else ""
+        Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        plot_Config=f"{plot_config}," if _is_nonempty_string(plot_config) else ""
 
         code = f"\\draw{Config} plot[{plot_Config} smooth] file " + "{"+ file_path.replace("\\","/") +"};"
         self.write(code)
 
     def smooth_plot_from_points(self, points, config=def_path_config, plot_config=""):
 
-        Config=f"[{config}]" if (not isnone(config) and config!="") else ""
-        plot_Config=f"{plot_config}," if (not (plot_config is None) and plot_config.strip()!="") else ""
+        Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        plot_Config=f"{plot_config}," if _is_nonempty_string(plot_config) else ""
 
         points_string=""
         for point in points:
@@ -462,7 +485,8 @@ class Tikz():
 
         self.smooth_plot_from_file(table_name, config=config, plot_config=plot_config)
 
-    def draw_vector_field_from_func(self, func, x_range=[-10, 10], y_range=[-10, 10], grad=("red", "blue"), grad_range=(0, 100), config=tikz_config.path_config, len_range=(0, 1), arrow_tip=tikz_config.arrow_tip):
+    def draw_vector_field_from_func(self, func, x_range=[-10, 10], y_range=[-10, 10], grad=("red", "blue"), grad_range=(0, 100), 
+                                    config=tikz_config.path_config, len_range=(0, 1), arrow_tip=tikz_config.arrow_tip, normalize=True):
         points=[]
         for x in range(x_range[0], x_range[1] + 1):
             for y in range(y_range[0], y_range[1] + 1):
@@ -472,11 +496,14 @@ class Tikz():
         length = lambda vector: dist(col_vector([0, 0]), vector)
         maxR = length(max(vectors_, key = length))
 
-        def normalize(vector):
-            minL, maxL = len_range
-            vnorm = norm(vector)
-            V = mth.sqrt( (maxL - minL)*length(vector)/maxR + minL ) * vnorm
-            return V
+        if normalize:
+            def normalize_func(vector):
+                minL, maxL = len_range
+                vnorm = norm(vector)
+                V = mth.sqrt( (maxL - minL)*length(vector)/maxR + minL ) * vnorm
+                return V
+        else:
+            normalize_func = lambda x: x
 
         def get_grad_value(vector):
             minG, maxG = grad_range
@@ -486,8 +513,39 @@ class Tikz():
         for p in points:
             V = func(p)
             grad_code = f"{grad[1]}!{get_grad_value(V)}!{grad[0]}"
-            Config = f"{grad_code}, {config}" if (not (config is None) and config.strip() != "") else f"{grad_code}"
-            self.draw_vector(normalize(V), start=p, config=Config, arrow_tip=arrow_tip)
+            Config = f"{grad_code}, {config}" if _is_nonempty_string(config) else f"{grad_code}"
+            self.draw_vector(normalize_func(V), start=p, config=Config, arrow_tip=arrow_tip)
+
+    def pgfplots_begin_axis(self, config=None, show_axis_lines=False, x_range=(-10, 10), y_range=(-10, 10)):
+        if not show_axis_lines:
+            dont_show_axis_code = "axis x line=none,axis y line=none,xticklabels=\\empty,yticklabels=\\empty"
+        else:
+            dont_show_axis_code = ""
+
+        Config = ""
+            
+        if show_axis_lines:
+            if not ((config is None) or config.strip()==""):
+                Config = f"[{config}, xmin={x_range[0]}, xmax={x_range[1]},ymin={y_range[0]}, ymax={y_range[1]}, xshift={x_range[0]}cm, yshift={y_range[0]}cm, x=1cm,  y=1cm]"
+            else:
+                Config = f"[xmin={x_range[0]}, xmax={x_range[1]},ymin={y_range[0]}, ymax={y_range[1]}, xshift={x_range[0]}cm, yshift={y_range[0]}cm, x=1cm,  y=1cm]"
+        else:
+            if not ((config is None) or config.strip()==""):
+                Config = f"[{dont_show_axis_code},{config}, xmin={x_range[0]}, xmax={x_range[1]},ymin={y_range[0]}, ymax={y_range[1]}, xshift={x_range[0]}cm, yshift={y_range[0]}cm, x=1cm,  y=1cm]"
+            else: 
+                Config = f"[{dont_show_axis_code},xmin={x_range[0]}, xmax={x_range[1]},ymin={y_range[0]}, ymax={y_range[1]}, xshift={x_range[0]}cm, yshift={y_range[0]}cm, x=1cm,  y=1cm]"
+
+        self.write("\\begin{axis}"+Config)
+
+    def pgfplots_end_axis(self):
+        self.write("\\end{axis}")
+
+    def pgfplots_addplot_from_expr(self, expr, samples=500, domain=(-5, 5), config=tikz_config.path_config):
+        Expr = expr.replace("**", "^")
+        Config = f"[{config}, samples={samples}, domain={domain[0]}:{domain[1]}]" if _is_nonempty_string(config) else f"[samples={samples}, domain={domain[0]}:{domain[1]}]"
+
+        code = f"\\addplot {Config} " + "{"+f"{Expr}"+"};"
+        self.write(code)
 
     def get_texcode(self):
         file_name = self.file_name
