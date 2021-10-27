@@ -4,7 +4,7 @@ from euclid.utils.file_edit import *
 from euclid.utils.math import *
 from pdf2image import convert_from_path, convert_from_bytes
 import PIL
-import euclid.tikz_config as tikz_config 
+import euclid.tikzrc as tikz_config 
 import sympy
 
 RND8=np.vectorize(lambda x: round(x, 8))
@@ -97,6 +97,12 @@ def_node_draw_config=""
 def_node_config="anchor=north"
 def_circle_config="cyan!20!black"
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 
 class Tikz():
@@ -114,6 +120,36 @@ class Tikz():
         else:
             self.tex_code = ""
         self.file_name=file_name
+
+        self.line_width_dict = {
+            "ultra thin": 0.1, 
+            "very thin": 0.2, 
+            "thin": 0.4 ,
+            "semithick": 0.6, 
+            "thick": 0.8 ,
+            "very thick": 1.2,
+            "ultra thick": 1.6
+        }
+
+
+    def _get_len_value(self, value):
+
+        if type(value)==int or type(value)==float:
+            out = f"{value}cm"
+        elif type(value)==str:
+            value = value.strip()
+            if is_number(value):
+                out = f"{value}cm"
+            if (value.endswith("cm") or value.endswith("pt") or value.endswith("in")) and (is_number(value[0:-2])):
+                out = value
+            elif value in self.line_width_dict.keys():
+                out = f"{self.line_width_dict[value]}pt"
+            else:
+                out = None
+        else:
+            out = None
+
+        return out
 
     def write(self,text):
         if not self.file_name is None:
@@ -194,7 +230,12 @@ class Tikz():
         clip_code=f"\\clip {str((xmin, ymin))} rectangle {str((xmax, ymax))};"
         self.write(clip_code)
 
-    def draw_axis(self, x_range=[-5,5], y_range=[-5,5], arrow_tip=tikz_config.axis_arrow_tip ,tick_labels=False):
+    def draw_axis(self, x_range=[-5,5], 
+                        y_range=[-5,5], 
+                        arrow_tip=tikz_config.axis_arrow_tip,
+                        tick_labels=False,
+                        axis_labels=("$x$", "$y$")):
+
         xmin,xmax=x_range
         ymin,ymax=y_range
 
@@ -214,13 +255,33 @@ class Tikz():
 
         #TODO
         code=axis_code+axis_ticks_code
+
+        if (type(axis_labels)==list or type(axis_labels)==tuple):
+            self.node(x_vect*x_range[1], node_config="anchor= north east", text=axis_labels[0])
+            self.node(y_vect*y_range[1], node_config="anchor= north east", text=axis_labels[1])
+
         self.write(code)
 
-    def draw_grid(self, x_range=[-5,5], y_range=[-5,5], config=tikz_config.grid_config):
+    def draw_grid(self, x_range=[-5,5], 
+                        y_range=[-5,5],
+                        step=1,
+                        line_width='thin',
+                        color='RoyalBlue',
+                        style='dashed',
+                        xshift=0,
+                        yshift=0,
+                        config=''):
+
         xmin,xmax=x_range
         ymin,ymax=y_range
 
-        Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        _line_width = self._get_len_value(line_width)
+        step = self._get_len_value(step)
+        xshift = self._get_len_value(xshift)
+        yshift = self._get_len_value(yshift)
+
+        Config = f"[step={step},line width={_line_width},xshift={xshift},yshift={yshift},{color},{style},{config}]"
+
         grid_code=f"\\draw{Config} {str((xmin,ymin))} grid {str((xmax,ymax))};"
         self.write(grid_code)
 
