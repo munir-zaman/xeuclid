@@ -316,7 +316,7 @@ class Tikz():
         X,Y=row_vector(vector)
         X,Y=round(X, 8),round(Y, 8)
 
-        if (not np.isnan(vector).any()) or (X!=0 and Y!=0):
+        if (not np.isnan(vector).any()) and (X!=0 or Y!=0):
             Config=f"[{config},{arrow_tip}]" if _is_nonempty_string(config) else f"[{Tip}]"
             code=f"%vector [{X}, {Y}]\n\\draw{Config} {(start[0,0], start[1,0])} -- {str((X + start[0,0], Y + start[1,0]))};"
             self.write(code)
@@ -325,7 +325,7 @@ class Tikz():
             self.draw_point(start, config=config)
         else:
             print("WARNING: Invalid value encountered.")
-
+            
     def draw_path(self,*points, config=tikz_config.path_config, cycle=False):
         points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
