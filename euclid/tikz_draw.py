@@ -132,14 +132,14 @@ class Tikz():
         }
 
 
-    def _get_len_value(self, value):
+    def _get_len_value(self, value, default_unit='cm'):
 
         if type(value)==int or type(value)==float:
-            out = f"{value}cm"
+            out = f"{value}{default_unit}"
         elif type(value)==str:
             value = value.strip()
             if is_number(value):
-                out = f"{value}cm"
+                out = f"{value}{default_unit}"
             if (value.endswith("cm") or value.endswith("pt") or value.endswith("in")) and (is_number(value[0:-2])):
                 out = value
             elif value in self.line_width_dict.keys():
@@ -285,13 +285,27 @@ class Tikz():
         grid_code=f"\\draw{Config} {str((xmin,ymin))} grid {str((xmax,ymax))};"
         self.write(grid_code)
 
-    def draw_point(self, point, config=tikz_config.point_config, radius=2):
+    def draw_point(self, point,
+                        radius=2,
+                        color='black',
+                        fill_color='DeepSkyBlue',
+                        line_width='thin',
+                        config=""):
+
         X,Y=row_vector(point)
         X,Y=round(X, 8),round(Y, 8)
 
-        Config=f"[{config}]" if _is_nonempty_string(config) else ""
-        draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius}pt);"
+        radius = self._get_len_value(radius, default_unit="pt")
+        line_width = self._get_len_value(line_width)
+
+        Config=f"[line width={line_width}, fill={fill_color}, draw={color}, {config}]"
+
+        draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius});"
         self.write(draw_point_code)
+
+    def draw_points(self, *points, **kwordargs):
+        for point in points:
+            self.draw_point(point, **kwordargs)
 
     def draw_vector(self,vector,start=origin, config=tikz_config.vector_config, arrow_tip=tikz_config.arrow_tip):
         """ draws the vector `vector` with tail at `start` 
@@ -364,10 +378,6 @@ class Tikz():
     def draw_segments(self, *segments):
         for segment in segments:
             self.draw_segment(segment)
-
-    def draw_points(self, *points, config=tikz_config.point_config, radius=2):
-        for point in points:
-            self.draw_point(point, config=config, radius=radius)
 
     def draw_line(self, line, config=tikz_config.line_config, x_range=[-5,5], y_range=[-5, 5]):
         xmin, xmax=x_range
