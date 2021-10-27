@@ -5,6 +5,7 @@ from euclid.utils.math import *
 from pdf2image import convert_from_path, convert_from_bytes
 import PIL
 import euclid.tikz_config as tikz_config 
+import sympy
 
 RND8=np.vectorize(lambda x: round(x, 8))
 
@@ -546,6 +547,13 @@ class Tikz():
 
         code = f"\\addplot {Config} " + "{"+f"{Expr}"+"};"
         self.write(code)
+
+    def pgfplots_lagrange_polynomial_from_points(self, points):
+        def get_lagrange_poly_expr():
+            x = sympy.symbols("x")
+            expr = str(sympy.interpolate(points, x))
+            return expr
+        self.pgfplots_addplot_from_expr(get_lagrange_poly_expr())
 
     def get_texcode(self):
         file_name = self.file_name
