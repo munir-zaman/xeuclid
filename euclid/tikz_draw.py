@@ -104,6 +104,149 @@ def is_number(s):
     except ValueError:
         return False
 
+def _get_len_value(value, default_unit='cm') -> str:
+
+    line_width_dict = {
+                "ultra thin": 0.1, 
+                "very thin": 0.2, 
+                "thin": 0.4 ,
+                "semithick": 0.6, 
+                "thick": 0.8 ,
+                "very thick": 1.2,
+                "ultra thick": 1.6
+            }
+
+    if type(value)==int or type(value)==float:
+        out = f"{value}{default_unit}"
+    elif type(value)==str:
+        value = value.strip()
+        if is_number(value):
+            out = f"{value}{default_unit}"
+        elif (value.endswith("cm") or value.endswith("pt") or value.endswith("in")) and (is_number(value[0:-2])):
+            out = value
+        elif value in line_width_dict.keys():
+            out = f"{line_width_dict[value]}pt"
+        else:
+            out = None
+    else:
+        out = None
+
+    return out
+
+def _parse_pos(pos):
+    if type(pos) == tuple or type(pos) == list or type(pos) == np.ndarray:
+        x, y = row_vector(pos)
+        out = f"({x}cm, {y}cm)"
+    elif type(pos) == str:
+        if len(pos.split(",")) == 2:
+            X_, Y_ = pos.split(",")
+            X_, Y_ = X_.strip(), Y_.strip()
+            if (X_[0]=="(") and (Y_[-1]==")"):
+                X_ = X_[1::]
+                Y_ = Y_[0:-1:]
+                print(X_, Y_)
+            x, y = _get_len_value(X_), _get_len_value(Y_)
+            out = f"({x}, {y})"
+        elif not (pos[0]=="(" and pos[-1]==")"):
+            out = f"({pos})"
+        else:
+            out = pos
+
+    return out
+
+
+class Node:
+
+    def __init__(self, name,shape="circle",
+                            rounded_corners="0pt",
+                            fill="Black!5", 
+                            draw="Black",
+                            pos=(0,0),
+                            line_width="thin",
+                            opacity="1",
+                            scale=1,
+                            text=" "):
+        self.name = str(name)
+        self.shape = shape
+        self.fill = fill
+        self.draw = draw
+        self.pos_str = self._parse_pos(pos)
+        self.config = ""
+        self.line_width = _get_len_value(line_width, default_unit='pt')
+        self.rounded_corners = _get_len_value(rounded_corners, default_unit="pt")
+        self.opacity = str(opacity)
+        self.text = str(text)
+        self.scale = str(scale)
+
+    def _parse_pos(self, pos: str) -> str:
+        return _parse_pos(pos)
+
+    def _gen_code(self):
+        self._code = f"\\node ({self.name}) at {self.pos_str} [fill={self.fill},draw={self.draw},{self.config},opacity={self.opacity},line width={self.line_width},rounded corners={self.rounded_corners},{self.shape},scale={self.scale}]"
+        self._code += " {"+self.text+"};"
+    
+    def code(self):
+        self._gen_code()
+        return self._code
+
+class Path:
+    def __init__(self,  color="Black",
+                        opacity="1",
+                        line_width="thick",
+                        style="solid",
+                        line_cap="round",
+                        rounded_corners="1pt",
+                        config=""):
+        self._code = ""
+        self._code += "\\draw["
+        self._code += f"color={color},"
+        self._code += f"opacity={opacity},"
+        self._code += f"line width="+_get_len_value(line_width, default_unit="pt")+","
+        self._code += f"{style},"
+        self._code += f"line cap={line_cap},"
+        self._code += f"rounded corners={rounded_corners},"
+        self._code += f"{config},]"
+
+    def at(self, pos):
+        parsed_pos = _parse_pos(pos)
+        self._code += f" {parsed_pos}"
+        return self
+
+    def line_to(self ,pos, line_type="--"):
+        parsed_pos = _parse_pos(pos)
+        self._code += f" {line_type} {parsed_pos}"
+        return self
+
+    def to(self, pos,
+                 bend_left=None,
+                 bend_right=None,
+                 In=None,
+                 Out=None,
+                 config=""):
+
+        parsed_pos = _parse_pos(pos)
+
+        code = f"{config},"
+        if not bend_left is None:
+            code+= f"bend left={bend_left},"
+        if not bend_right is None:
+            code+= f"bend right={bend_right},"
+        if not In is None:
+            code+= f"in={In},"
+        if not Out is None:
+            code+= f"out={Out},"
+
+        self._code += f" to[{code}] {parsed_pos}"
+        return self
+
+    def close(self):
+        self._code += " ;"
+        return self
+
+    def code(self):
+        return self._code
+
+
 
 class Tikz():
     def __init__(self,file_name, preamble=tikz_config.default_preamble):
@@ -131,25 +274,8 @@ class Tikz():
             "ultra thick": 1.6
         }
 
-
     def _get_len_value(self, value, default_unit='cm') -> str:
-
-        if type(value)==int or type(value)==float:
-            out = f"{value}{default_unit}"
-        elif type(value)==str:
-            value = value.strip()
-            if is_number(value):
-                out = f"{value}{default_unit}"
-            if (value.endswith("cm") or value.endswith("pt") or value.endswith("in")) and (is_number(value[0:-2])):
-                out = value
-            elif value in self.line_width_dict.keys():
-                out = f"{self.line_width_dict[value]}pt"
-            else:
-                out = None
-        else:
-            out = None
-
-        return out
+        return _get_len_value(value, default_unit=default_unit)
 
     def write(self,text):
         if not self.file_name is None:
@@ -684,5 +810,9 @@ class Tikz():
 
         return texcode
 
-
+    def add(self, obj):
+        if type(obj) is Path:
+            self.write(obj.code())
+        elif type(obj) is Node:
+            self.write(obj.code())
 
