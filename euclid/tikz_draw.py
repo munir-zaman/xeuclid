@@ -132,7 +132,7 @@ class Tikz():
         }
 
 
-    def _get_len_value(self, value, default_unit='cm'):
+    def _get_len_value(self, value, default_unit='cm') -> str:
 
         if type(value)==int or type(value)==float:
             out = f"{value}{default_unit}"
@@ -157,7 +157,7 @@ class Tikz():
         else:
             self.tex_code += self.tex_code + text + "\n"
 
-    def read(self, show=True):
+    def read(self, show=True) -> str:
         if not self.file_name is None:
             with open(self.file_name) as file:
                 out = file.read()
@@ -266,7 +266,9 @@ class Tikz():
                         y_range=[-5,5],
                         step=1,
                         line_width='thin',
+                        line_cap='round',
                         color='RoyalBlue',
+                        opacity=1,
                         style='dashed',
                         xshift=0,
                         yshift=0,
@@ -280,7 +282,7 @@ class Tikz():
         xshift = self._get_len_value(xshift)
         yshift = self._get_len_value(yshift)
 
-        Config = f"[step={step},line width={_line_width},xshift={xshift},yshift={yshift},{color},{style},{config}]"
+        Config = f"[step={step},line width={_line_width},line cap={line_cap},xshift={xshift},yshift={yshift},{color},opacity={opacity},{style},{config}]"
 
         grid_code=f"\\draw{Config} {str((xmin,ymin))} grid {str((xmax,ymax))};"
         self.write(grid_code)
@@ -414,7 +416,8 @@ class Tikz():
                         opacity="1",
                         arrow_tip="{Stealth[round]}-{Stealth[round]}",
                         line_width="thick",
-                        line_cap="round"):
+                        line_cap="round",
+                        style="solid"):
 
         line_width = self._get_len_value(line_width, default_unit="pt")
 
@@ -455,7 +458,7 @@ class Tikz():
         p1=tuple(RND8(row_vector(p1)))
         p2=tuple(RND8(row_vector(p2)))
 
-        draw_Config=f"[{config},line width={line_width},{color},opacity={opacity},line cap={line_cap},{arrow_tip},]"
+        draw_Config=f"[{config},line width={line_width},{color},opacity={opacity},line cap={line_cap},{arrow_tip},{style},]"
         line_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(line_draw_code)
@@ -680,3 +683,6 @@ class Tikz():
             texcode += s
 
         return texcode
+
+
+
