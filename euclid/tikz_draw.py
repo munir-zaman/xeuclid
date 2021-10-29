@@ -287,7 +287,8 @@ class Tikz():
 
     def draw_point(self, point,
                         radius=2,
-                        color='black',
+                        color='Black',
+                        opacity=1,
                         fill_color='DeepSkyBlue',
                         line_width='thin',
                         config=""):
@@ -298,7 +299,7 @@ class Tikz():
         radius = self._get_len_value(radius, default_unit="pt")
         line_width = self._get_len_value(line_width)
 
-        Config=f"[line width={line_width}, fill={fill_color}, draw={color}, {config}]"
+        Config=f"[line width={line_width}, fill={fill_color}, draw={color},opacity={opacity},{config}]"
 
         draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius});"
         self.write(draw_point_code)
@@ -307,8 +308,16 @@ class Tikz():
         for point in points:
             self.draw_point(point, **kwordargs)
 
-    def draw_vector(self,vector,start=origin, config=tikz_config.vector_config, arrow_tip=tikz_config.arrow_tip):
-        """ draws the vector `vector` with tail at `start` 
+    def draw_vector(self, vector, start=origin,
+                                  color="Black",
+                                  opacity="1",
+                                  line_width="thick",
+                                  style="solid",
+                                  line_cap="round",
+                                  arrow_tip=tikz_config.arrow_tip,
+                                  config=''):
+
+        """ draws the vector `vector` with tail at `start`
             If the `vector` contains `NaN`/`None` nothing will be drawn.
 
             vector: np.array([[x], [y]])
@@ -316,17 +325,31 @@ class Tikz():
         X,Y=row_vector(vector)
         X,Y=round(X, 8),round(Y, 8)
 
+        line_width = self._get_len_value(line_width, default_unit="pt")
+        Config = f"[{color},opacity={opacity},line width={line_width},line cap={line_cap},{arrow_tip},{config},{style}]"
+
         if (not np.isnan(vector).any()) and (X!=0 or Y!=0):
-            Config=f"[{config},{arrow_tip}]" if _is_nonempty_string(config) else f"[{Tip}]"
-            code=f"%vector [{X}, {Y}]\n\\draw{Config} {(start[0,0], start[1,0])} -- {str((X + start[0,0], Y + start[1,0]))};"
+            code=f"\\draw{Config} {(start[0,0], start[1,0])} -- {str((X + start[0,0], Y + start[1,0]))};"
             self.write(code)
 
         elif (X==0 and Y==0):
-            self.draw_point(start, config=config)
+            self.draw_point(start, color=color)
         else:
             print("WARNING: Invalid value encountered.")
-            
-    def draw_path(self,*points, config=tikz_config.path_config, cycle=False):
+
+    def draw_path(self,*points,
+                        config="",
+                        line_width="thick",
+                        color="Black",
+                        opacity="1",
+                        style="solid",
+                        rounded_corners="1pt",
+                        line_cap="round",
+                        cycle=False):
+
+        line_width = self._get_len_value(line_width, default_unit='pt')
+        rounded_corners = self._get_len_value(rounded_corners, default_unit='pt')
+
         points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
 
@@ -335,12 +358,17 @@ class Tikz():
 
         path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;"
 
-        Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        Config=f"[{color},opacity={opacity},{style},line cap={line_cap},rounded corners={rounded_corners},line width={line_width},{config}]"
 
         draw_path_code=f"\\draw{Config}  "+path_string
         self.write(draw_path_code)
 
-    def fill_path(self, *points, fill_config=tikz_config.path_fill_config, cycle=False, fill_color=tikz_config.path_fill_color):
+    def fill_path(self, *points,
+                         fill_config="",
+                         cycle=False,
+                         fill_color=tikz_config.path_fill_color,
+                         opacity=0.3):
+
         points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
 
@@ -349,7 +377,7 @@ class Tikz():
 
         path_string=path_string+f"{str(points_xy[-1])};" if not cycle else path_string+f"{str(points_xy[-1])} -- cycle;"
 
-        Config=f"[{fill_config},{fill_color}]" if _is_nonempty_string(fill_config) else f"{fill_color}"
+        Config=f"[{fill_config},{fill_color},opacity={opacity},]"
 
         fill_path_code=f"\\fill{Config}  "+path_string
         self.write(fill_path_code)
@@ -379,7 +407,17 @@ class Tikz():
         for segment in segments:
             self.draw_segment(segment)
 
-    def draw_line(self, line, config=tikz_config.line_config, x_range=[-5,5], y_range=[-5, 5]):
+    def draw_line(self, line,
+                        config='',
+                        x_range=[-5,5], y_range=[-5, 5],
+                        color="Black",
+                        opacity="1",
+                        arrow_tip="{Stealth[round]}-{Stealth[round]}",
+                        line_width="thick",
+                        line_cap="round"):
+
+        line_width = self._get_len_value(line_width, default_unit="pt")
+
         xmin, xmax=x_range
         ymin, ymax=y_range
 
@@ -417,14 +455,14 @@ class Tikz():
         p1=tuple(RND8(row_vector(p1)))
         p2=tuple(RND8(row_vector(p2)))
 
-        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        draw_Config=f"[{config},line width={line_width},{color},opacity={opacity},line cap={line_cap},{arrow_tip},]"
         line_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(line_draw_code)
 
-    def draw_lines(self, *lines, config=tikz_config.line_config, x_range=[-5,5], y_range=[-5,5]):
+    def draw_lines(self, *lines, **kwargs):
         for line in lines:
-            self.draw_line(line, config=config, x_range=x_range, y_range=y_range)
+            self.draw_line(line, **kwargs)
 
     def draw_ray(self, ray, config=tikz_config.ray_config, x_range=[-5,5], y_range=[-5, 5]):
         #ray.A cannot be outside given x y range
