@@ -142,14 +142,43 @@ def intersection_segment_segment(segment1,segment2):
 
 class Line(GObject):
     def __init__(self,A,B):
-        self.A=A
-        self.B=B
-        self.v=self.B-self.A
-        # v is the velocity vector
-        self.type='line'
+        self._A = col_vector(A)
+        self._B = col_vector(B)
+        self._update_attrs()
 
         if isclose(self.v[0,0], 0) and isclose(self.v[1,0], 0):
-            print('WARNING V=[0,0]')
+            raise ValueError("`self.A` and `self.B` cannot be equal")
+
+    def _update_attrs(self):
+        self._v = self.B - self.A
+
+    @property
+    def v(self):
+        return self._v
+
+    @property
+    def A(self):
+        return self._A
+
+    @property
+    def B(self):
+        return self._B
+
+    @A.setter
+    def A(self, value):
+        value = col_vector(value)
+        self._A = value
+        self._update_attrs()
+    
+    @B.setter
+    def B(self, value):
+        value = col_vector(value)
+        self._B = value
+        self._update_attrs()
+    
+    @property
+    def type(self):
+        return 'line'
 
     def __call__(self,t):
         return (self.A+self.v*t)
@@ -402,14 +431,52 @@ def concurrent(*lines: Line):
 
 
 class Segment(GObject):
-    def __init__(self, A: np.ndarray, B: np.ndarray):
-        self.A=A
-        self.B=B
-        self.v=self.B-self.A
-        self.type="segment"
-        self.line=Line(self.A, self.B)
-        self.mid=mid(self.A, self.B)
-        self.length=dist(self.A, self.B)
+    def __init__(self, A, B):
+        self._A = col_vector(A)
+        self._B = col_vector(B)
+        self._update_attrs()
+
+    def _update_attrs(self):
+        self._v = self.B - self.A
+        self._line = Line(self.A, self.B)
+        self._mid = mid(self.A, self.B)
+        self._length = dist(self.A, self.B)        
+
+    @property
+    def type(self):
+        return 'segment'
+
+    @property
+    def line(self):
+        return self._line
+
+    @property
+    def mid(self):
+        return self._mid
+
+    @property
+    def length(self):
+        return self._length
+
+    @property
+    def A(self):
+        return self._A
+
+    @property
+    def B(self):
+        return self._B
+    
+    @A.setter
+    def A(self, value):
+        value = col_vector(value)
+        self._A = value
+        self._update_attrs()
+
+    @B.setter
+    def B(self, value):
+        value = col_vector(value)
+        self._B = value
+        self._update_attrs()
 
     def __call__(self, t):
         return (self.A+ self.v*t)
@@ -491,11 +558,45 @@ class Segment(GObject):
 
 class Ray(GObject):
     def __init__(self, A, B):
-        self.A=A
-        self.B=B
-        self.v=self.B-self.A
-        self.type="ray"
-        self.line=Line(self.A, self.B)
+        self._A = col_vector(A)
+        self._B = col_vector(B)
+        self._update_attrs()
+
+    def _update_attrs(self):
+        self._v = self.B - self.A
+        self._line = Line(self.A, self.B)
+
+    @property
+    def line(self):
+        return self._line
+    
+    @property
+    def v(self):
+        return self._v
+    
+    @property
+    def type(self):
+        return 'ray'
+
+    @property
+    def A(self):
+        return self._A
+
+    @property
+    def B(self):
+        return self._B
+
+    @A.setter
+    def A(self, value):
+        value = col_vector(value)
+        self._A = value
+        self._update_attrs()
+
+    @B.setter
+    def B(self, value):
+        value = col_vector(value)
+        self._B = value
+        self._update_attrs()
 
     def __call__(self, t):
         return self.A+ self.v*t
@@ -642,10 +743,8 @@ def intersection_poly_poly(poly1, poly2):
 
 class Polygon(GObject):
 
-    def __init__(self,*vertices):
-
+    def __init__(self, *vertices):
         self.vertices=list(vertices)
-        self.type="polygon"
 
     @property
     def area(self):
@@ -654,6 +753,10 @@ class Polygon(GObject):
     @property
     def bbox(self):
         return self.get_bbox()
+
+    @property
+    def type(self):
+        return 'polygon'
 
     def isinside(self, point) -> bool:
         """ returns True if point is inside the polygon
@@ -779,7 +882,10 @@ class Circle(GObject):
     def __init__(self, center, radius):
         self.center=center
         self.radius=radius
-        self.type="circle"
+
+    @property
+    def type(self):
+        return 'circle'
 
     def __repr__(self):
         return f"[{self.center[0,0]}, {self.center[1,0]}] + [cos(x), sin(x)]* {self.radius}"
@@ -891,5 +997,4 @@ def points_to_circle(point1, point2, point3):
     radius=dist(center, p1)
 
     return Circle(center, radius)
-
 
