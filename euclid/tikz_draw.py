@@ -147,6 +147,8 @@ def _parse_pos(pos):
                 print(X_, Y_)
             x, y = _get_len_value(X_), _get_len_value(Y_)
             out = f"({x}, {y})"
+        elif pos.strip() == 'cycle':
+            out = 'cycle'
         elif not (pos[0]=="(" and pos[-1]==")"):
             out = f"({pos})"
         else:
@@ -357,30 +359,49 @@ class Tikz():
         self.write(clip_code)
 
     def draw_axis(self, x_range=[-5,5], 
-                        y_range=[-5,5], 
+                        y_range=[-5,5],
+                        ticks=True,
+                        tick_step=1,
+                        tick_len=4,
+                        tick_config='line cap=round',
                         arrow_tip=tikz_config.axis_arrow_tip,
-                        tick_labels=False,
+                        axis_config='',
+                        tick_labels='$\\mathsf{@}$',
+                        tick_labels_config="",
                         axis_labels=("$x$", "$y$")):
 
         xmin,xmax=x_range
         ymin,ymax=y_range
 
-        Tip=f"[{arrow_tip}]" if _is_nonempty_string(arrow_tip) else ""
+        Axis_Config=f"[{arrow_tip},{axis_config},]"
 
         axis_code=f"""
     %axis
-    \\draw{Tip} ({xmin},0) -- ({xmax},0);
-    \\draw{Tip} (0, {ymin}) -- (0, {ymax});\n"""
+    \\draw{Axis_Config} ({xmin},0) -- ({xmax},0);
+    \\draw{Axis_Config} (0, {ymin}) -- (0, {ymax});\n"""
 
-        axis_ticks_code="""
-    %axis ticks
-    \\foreach \\x in {"""+f"""{xmin+1},...,{xmax-1}"""+"""}
-        \\draw (\\x,-2pt) -- (\\x,2pt);\n""" + """%\n
-    \\foreach \\x in {"""+f"""{ymin+1},...,{ymax-1}"""+"""}
-        \\draw (-2pt,\\x) -- (2pt,\\x);\n"""
+        Kx_0, Kx_1 = mth.floor(xmin/tick_step) + 1, mth.ceil(xmax/tick_step) - 1
+        Ky_0, Ky_1 = mth.floor(ymin/tick_step) + 1, mth.ceil(ymax/tick_step) - 1
 
-        #TODO
-        code=axis_code+axis_ticks_code
+        code=axis_code
+        if ticks:
+            axis_ticks_code = f"\t\\foreach \\x in {{{Kx_0},...,{Kx_1}}}\n"
+            axis_ticks_code += f"\t\t\\draw[{tick_config},] (\\x*{tick_step}, -{tick_len/2}pt) -- (\\x*{tick_step}, {tick_len/2}pt);\n"
+
+            axis_ticks_code += f"\t\\foreach \\y in {{{Ky_0},...,{Ky_1}}}\n"
+            axis_ticks_code += f"\t\t\\draw[{tick_config},] (-{tick_len/2}pt, \\y*{tick_step}) -- ({tick_len/2}pt, \\y*{tick_step});\n"
+            code += axis_ticks_code
+
+        if type(tick_labels) == str:
+            x_tick_labels = tick_labels.replace('@', f'\\pgfmathparse{{\\lx*{tick_step}}}\\pgfmathprintnumber{{\\pgfmathresult}}')
+            tick_labels_code = f"\t\\foreach \\lx in {{{Kx_0},...,{Kx_1}}}\n"
+            tick_labels_code += f"\t\t\\draw (\\lx*{tick_step}, 0) node [{tick_labels_config},anchor=north west,] {{{x_tick_labels}}};\n"
+
+            y_tick_labels = tick_labels.replace('@', f'\\pgfmathparse{{\\ly*{tick_step}}}\\pgfmathprintnumber{{\\pgfmathresult}}')
+            tick_labels_code += f"\t\\foreach \\ly in {{{Ky_0},...,{Ky_1}}}\n"
+            tick_labels_code += f"\t\t\\draw (0,\\ly*{tick_step}) node [{tick_labels_config},anchor=south east,] {{{y_tick_labels}}};\n"
+
+            code += tick_labels_code
 
         if (type(axis_labels)==list or type(axis_labels)==tuple):
             self.node(x_vect*x_range[1], node_config="anchor= north east", text=axis_labels[0])

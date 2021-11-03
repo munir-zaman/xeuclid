@@ -447,6 +447,10 @@ class Segment(GObject):
         return 'segment'
 
     @property
+    def v(self):
+        return self._v
+
+    @property
     def line(self):
         return self._line
 
