@@ -366,8 +366,10 @@ class Tikz():
                         tick_config='line cap=round',
                         arrow_tip=tikz_config.axis_arrow_tip,
                         axis_config='',
+                        axis_labels_config='',
                         tick_labels='$\\mathsf{@}$',
                         tick_labels_config="",
+                        tick_labels_exclude_zero=True,
                         axis_labels=("$x$", "$y$")):
 
         xmin,xmax=x_range
@@ -394,18 +396,30 @@ class Tikz():
 
         if type(tick_labels) == str:
             x_tick_labels = tick_labels.replace('@', f'\\pgfmathparse{{\\lx*{tick_step}}}\\pgfmathprintnumber{{\\pgfmathresult}}')
+            if tick_labels_exclude_zero:
+                x_tick_replace = f"\\pgfmathparse{{ \\lx*{tick_step} }}"
+                x_tick_replace += f"\\ifthenelse{{ \\equal{{\\lx}}{{0}} }}{{ }}"
+                x_tick_replace += f"{{ \\pgfmathprintnumber{{\\pgfmathresult}} }}"
+                x_tick_labels = tick_labels.replace('@', x_tick_replace)
+            
             tick_labels_code = f"\t\\foreach \\lx in {{{Kx_0},...,{Kx_1}}}\n"
             tick_labels_code += f"\t\t\\draw (\\lx*{tick_step}, 0) node [{tick_labels_config},anchor=north west,] {{{x_tick_labels}}};\n"
 
             y_tick_labels = tick_labels.replace('@', f'\\pgfmathparse{{\\ly*{tick_step}}}\\pgfmathprintnumber{{\\pgfmathresult}}')
+            if tick_labels_exclude_zero:
+                y_tick_replace = f"\\pgfmathparse{{ \\ly*{tick_step} }}"
+                y_tick_replace += f"\\ifthenelse{{ \\equal{{\\ly}}{{0}} }}{{ }}"
+                y_tick_replace += f"{{ \\pgfmathprintnumber{{\\pgfmathresult}} }}"
+                y_tick_labels = tick_labels.replace('@', y_tick_replace)
+
             tick_labels_code += f"\t\\foreach \\ly in {{{Ky_0},...,{Ky_1}}}\n"
             tick_labels_code += f"\t\t\\draw (0,\\ly*{tick_step}) node [{tick_labels_config},anchor=south east,] {{{y_tick_labels}}};\n"
 
             code += tick_labels_code
 
         if (type(axis_labels)==list or type(axis_labels)==tuple):
-            self.node(x_vect*x_range[1], node_config="anchor= north east", text=axis_labels[0])
-            self.node(y_vect*y_range[1], node_config="anchor= north east", text=axis_labels[1])
+            self.node(x_vect*x_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[0])
+            self.node(y_vect*y_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[1])
 
         self.write(code)
 
