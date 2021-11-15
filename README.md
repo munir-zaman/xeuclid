@@ -29,16 +29,23 @@ I=bisector1.intersection(bisector2)
 # intersection of bisector1 and bisector2
 # I is the incenter of trinagle ABC
 
-tikz=Tikz('triangle.tex')
+tikz=Tikz('triangle.tex', preamble=tikz_config.standalone)
+
+tikz.usepackage('ifthen')
 
 tikz.begin('document')
 tikz.begin('tikzpicture')
 
-tikz.draw_grid(x_range=[-5,5], y_range=[-5,5])
-tikz.draw_axis(x_range=[-5,5], y_range=[-5,5])
+tikz.draw_grid(x_range=[-5,5],
+               y_range=[-5,5],
+               color='Black!50')
+
+tikz.draw_axis(x_range=[-5,5], 
+               y_range=[-5,5],
+               tick_labels=None)
 
 tikz.draw_angle(A,C,B, radius=0.3)
-tikz.draw_angle(A,B,C, radius=0.3)
+tikz.draw_angle(C,B,A, radius=0.3)
 tikz.draw_angle(B,A,C, radius=0.3)
 
 tikz.draw_path(A,B,C,cycle=True)
