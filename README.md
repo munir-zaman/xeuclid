@@ -1,14 +1,18 @@
-`euclid` is little project of mine that I've been working on for the past few weeks. It's a set of python scripts 
+`euclid` is a project of mine that I've been working on for the past few months. It's a set of python scripts 
 that lets you do analytic geometry in `python`. You can also draw TikZ diagrams using `tikz_draw.py`. 
-**It's a work in progress and therefore it can't do much.** 
-(Geometric objects are defined using *parametric equations*.) \
+**It's a work in progress.** 
 The following python packages are required to use `euclid`,
 
-* Numpy
-* pdf2image 
+* [`numpy`](https://pypi.org/project/numpy/)
+* [`scipy`](https://pypi.org/project/scipy/)
+* [`sympy`](https://pypi.org/project/sympy/)
+* [`pdf2image`](https://pypi.org/project/pdf2image/)
+* [`Pillow`](https://pypi.org/project/Pillow/)
 
 To use `tikz_draw.py` you have to have `LaTeX` and `tikz` package installed.
 # Example Usage
+
+You can find more examples in `doc\example_usage_files\`.
 
 ```python
 from euclid import *
