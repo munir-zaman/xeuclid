@@ -6,6 +6,7 @@ from pdf2image import convert_from_path, convert_from_bytes
 import PIL
 import euclid.tikzrc as tikz_config 
 import sympy
+import scipy
 
 RND8=np.vectorize(lambda x: round(x, 8))
 
@@ -850,4 +851,34 @@ class Tikz():
             self.write(obj.code())
         elif type(obj) is Node:
             self.write(obj.code())
+
+    def draw_triangulation(self, points, **pathargs):
+        # triangulation
+
+        sci_tri = scipy.spatial.Delaunay(points)
+        edges = set()
+
+        vertices = sci_tri.vertices
+        vertices = [tuple(vert) for vert in vertices]
+
+        edges = set()
+        for tri in vertices:
+            for i in range(1, len(tri)):
+                E = (tri[i-1], tri[i])
+                if (tri[i], tri[i-1]) not in edges:
+                    edges.add(E)
+
+            cycleE = (tri[0], tri[-1])
+            if (tri[-1], tri[0]) not in edges:
+                edges.add(cycleE)
+
+        print(edges)
+
+        path = Path(**pathargs)
+        for edge in edges:
+            path.at( points[edge[0]] ).line_to( points[edge[1]] )
+        path.close()
+
+        self.add(path)
+
 
