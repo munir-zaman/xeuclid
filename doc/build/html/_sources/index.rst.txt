@@ -24,6 +24,8 @@ To use ``tikz_draw.py`` you have to have ``LaTeX`` and ``tikz`` package installe
    :maxdepth: 2
    :caption: Contents:
 
+   usage
+
 Indices and tables
 ==================
 
