@@ -1,5 +1,5 @@
-from euclid.utils.math import *
-from euclid.euclid2 import dist, mid, GObject, Line, Segment, Ray
+from xeuclid.utils.math import *
+from xeuclid.euclid2 import dist, mid, GObject, Line, Segment, Ray
 import numpy as np
 
 

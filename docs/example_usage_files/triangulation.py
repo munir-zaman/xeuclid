@@ -1,4 +1,4 @@
-from euclid import *
+from xeuclid import *
 
 tikz = Tikz('triangulation.tex', preamble=tikz_config.standalone)
 tikz.begin('document')

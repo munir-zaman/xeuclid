@@ -1,4 +1,4 @@
-from euclid import *
+from xeuclid import *
 
 
 def square_on_side(A, B):

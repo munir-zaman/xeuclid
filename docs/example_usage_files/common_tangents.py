@@ -1,4 +1,4 @@
-from euclid import *
+from xeuclid import *
 
 A=origin
 B=col_vector([3,3])

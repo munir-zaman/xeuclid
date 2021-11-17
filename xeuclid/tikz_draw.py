@@ -1,10 +1,10 @@
 import os
-from euclid.euclid2 import *
-from euclid.utils.file_edit import *
-from euclid.utils.math import *
+from xeuclid.euclid2 import *
+from xeuclid.utils.file_edit import *
+from xeuclid.utils.math import *
 from pdf2image import convert_from_path, convert_from_bytes
 import PIL
-import euclid.tikzrc as tikz_config 
+import xeuclid.tikzrc as tikz_config 
 import sympy
 import scipy
 

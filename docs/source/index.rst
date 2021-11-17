@@ -1,16 +1,16 @@
-.. Euclid documentation master file, created by
+.. xeuclid documentation master file, created by
    sphinx-quickstart on Tue Nov 16 14:04:13 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Euclid's documentation!
-==================================
+Welcome to Xeuclid's documentation!
+===================================
 
-``euclid`` is a project of mine that I've been working on for the past few months. It's a set of python scripts 
+``xeuclid`` is a project of mine that I've been working on for the past few months. It's a set of python scripts 
 that lets you do analytic geometry in ``python``. You can also draw TikZ diagrams using ``tikz_draw.py``. 
 **It's a work in progress.** 
 
-The following python packages are required to use ``euclid``,
+The following python packages are required to use ``xeuclid``,
 
 * `numpy <https://pypi.org/project/numpy/>`_
 * `scipy <https://pypi.org/project/scipy/>`_
@@ -25,7 +25,7 @@ To use ``tikz_draw.py`` you have to have ``LaTeX`` and ``tikz`` package installe
    :caption: Contents:
 
    usage
-   euclid.euclid2
+   xeuclid.euclid2
 
 Indices and tables
 ==================

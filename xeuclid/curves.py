@@ -1,5 +1,5 @@
-from euclid.utils.math import *
-from euclid.euclid2 import convex_hull
+from xeuclid.utils.math import *
+from xeuclid.euclid2 import convex_hull
 
 
 def bernstein_poly_func(degree, index, interval=(0, 1)):

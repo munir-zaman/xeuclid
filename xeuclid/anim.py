@@ -1,6 +1,6 @@
-from euclid.euclid2 import *
-from euclid.tikz_draw import *
-from euclid.utils.file_edit import *
+from xeuclid.euclid2 import *
+from xeuclid.tikz_draw import *
+from xeuclid.utils.file_edit import *
 
 class Anim():
 

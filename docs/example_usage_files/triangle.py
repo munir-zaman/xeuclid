@@ -1,4 +1,4 @@
-from euclid import *
+from xeuclid import *
 
 A=col_vector([2,1])
 B=col_vector([-1,4])

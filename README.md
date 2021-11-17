@@ -1,7 +1,7 @@
-`euclid` is a project of mine that I've been working on for the past few months. It's a set of python scripts 
+`xeuclid` is a project of mine that I've been working on for the past few months. It's a set of python scripts 
 that lets you do analytic geometry in `python`. You can also draw TikZ diagrams using `tikz_draw.py`. 
 **It's a work in progress.** 
-The following python packages are required to use `euclid`,
+The following python packages are required to use `xeuclid`,
 
 * [`numpy`](https://pypi.org/project/numpy/)
 * [`scipy`](https://pypi.org/project/scipy/)
@@ -15,7 +15,7 @@ To use `tikz_draw.py` you have to have `LaTeX` and `tikz` package installed.
 You can find more examples in `docs\example_usage_files\`.
 
 ```python
-from euclid import *
+from xeuclid import *
 
 A=col_vector([2,1])
 B=col_vector([-1,4])
@@ -72,7 +72,7 @@ tikz.pdf()
 ![Output](docs/example_usage_files/triangle.png)
 
 ```python
-from euclid import *
+from xeuclid import *
 
 A=origin
 B=col_vector([3,3])
@@ -125,7 +125,7 @@ tikz.pdf()
 ![Output](docs/example_usage_files/common_tangents.jpg)
 
 ```python
-from euclid import *
+from xeuclid import *
 
 
 def square_on_side(A, B):

@@ -1,4 +1,4 @@
-from euclid.utils.math import *
+from xeuclid.utils.math import *
 
 
 to_tuple = lambda vector: tuple(row_vector(vector))
@@ -59,7 +59,7 @@ def angle(A,B,C) -> float:
 
     Examples
     --------
-    >>> from euclid import *
+    >>> from xeuclid import *
     >>> A = [1, 2]
     >>> B = [0, -2]
     >>> C = [-2, 2]
@@ -880,7 +880,7 @@ def convex_hull(*points) -> list[np.ndarray]:
 
     Examples
     --------
-    >>> from euclid import *
+    >>> from xeuclid import *
     >>> import numpy as np
     >>> rng = np.random.default_rng()
     >>> points = [col_vector(point) for point in rng.random((100, 2))*10]

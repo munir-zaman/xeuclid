@@ -12,17 +12,19 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('../../'))
+
+from xeuclid import __version__
 
 # -- Project information -----------------------------------------------------
 
-project = 'Euclid'
+project = 'Xeuclid'
 copyright = '2021, Munir Uz Zaman'
 author = 'Munir Uz Zaman'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
-
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 

@@ -1,5 +1,5 @@
-from euclid import *
-import euclid.tikzrc as tikzrc
+from xeuclid import *
+import xeuclid.tikzrc as tikzrc
 
 tikz=Tikz('lagrange_poly_plot.tex', preamble=tikzrc.standalone)
 
