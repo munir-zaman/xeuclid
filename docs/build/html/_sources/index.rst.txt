@@ -25,6 +25,7 @@ To use ``tikz_draw.py`` you have to have ``LaTeX`` and ``tikz`` package installe
    :caption: Contents:
 
    usage
+   euclid.euclid2
 
 Indices and tables
 ==================

@@ -12,7 +12,7 @@ The following python packages are required to use `euclid`,
 To use `tikz_draw.py` you have to have `LaTeX` and `tikz` package installed.
 # Example Usage
 
-You can find more examples in `doc\example_usage_files\`.
+You can find more examples in `docs\example_usage_files\`.
 
 ```python
 from euclid import *
@@ -69,7 +69,7 @@ tikz.pdf()
 
 **Output:**
 
-![Output](doc/example_usage_files/triangle.png)
+![Output](docs/example_usage_files/triangle.png)
 
 ```python
 from euclid import *
@@ -122,7 +122,7 @@ tikz.pdf()
 
 **Output:**
 
-![Output](doc/example_usage_files/common_tangents.jpg)
+![Output](docs/example_usage_files/common_tangents.jpg)
 
 ```python
 from euclid import *
@@ -255,4 +255,4 @@ tikz.pdf()
 ```
 **Output:**
 
-![Output](doc/example_usage_files/sqr_center.jpg)
+![Output](docs/example_usage_files/sqr_center.jpg)

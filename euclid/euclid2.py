@@ -31,10 +31,41 @@ def reflect_about_line(point, line):
     return rotate(point, center, 180)
 
 
-def angle(A,B,C):
-    """ returns the angle <ABC
-        A,B,C : np.array([[x],
-                          [y]])
+def angle(A,B,C) -> float:
+    """returns the angle :math:`\\angle ABC`. The equation used to compute the angle is,
+
+    .. math::
+        \\angle ABC = 
+        \\mathrm{atan2}\\left( {C_y - B_y},\\ {C_x - B_x} \\right) - 
+        \\mathrm{atan2}\\left( {A_y - B_y},\\ {A_x - B_x} \\right)
+        \\pmod{360^{\\circ}}
+
+    where :math:`A = \\left( A_x,\\ A_y \\right)`, :math:`B = \\left( B_x,\\ B_y \\right)` and 
+    :math:`C = \\left( C_x,\\ C_y \\right)`
+
+    Parameters
+    ----------
+    A : np.ndarray, tuple or list
+        The point :math:`A`
+    B : np.ndarray, tuple or list
+        The point :math:`B`
+    C : np.ndarray, tuple or list
+        The point :math:`C`
+
+    Returns
+    -------
+    float
+        The angle :math:`\\angle ABC` 
+
+    Examples
+    --------
+    >>> from euclid import *
+    >>> A = [1, 2]
+    >>> B = [0, -2]
+    >>> C = [-2, 2]
+    >>> theta = angle(A, B, C)
+    >>> print(theta)
+    40.601294645004
     """
     a1,a2=row_vector(A)
     b1,b2=row_vector(B)
@@ -511,7 +542,7 @@ class Segment(GObject):
         if self.line == segment.line:
             A1, B1 = tuple(rnd(row_vector(self.A))), tuple(rnd(row_vector(self.B)))
             A2, B2 = tuple(rnd(row_vector(segment.A))), tuple(rnd(row_vector(segment.B)))
-            out = ({A1, B1} == {A2, B2})
+            out = {A1, B1} == {A2, B2}
         return out
 
     def __add__(self,vector):
@@ -763,14 +794,21 @@ class Polygon(GObject):
         return 'polygon'
 
     def isinside(self, point) -> bool:
-        """ returns True if point is inside the polygon
-            else returns False
-
-            point: np.ndarray
-            returns:
-                bool
         """
-        A = point
+        Parameters
+        ----------
+        point : np.ndarray, list or tuple
+
+        
+        Returns
+        -------
+        bool
+            Returns ``True`` if ``point`` is inside the Polygon. Returns ``False`` otherwise.
+
+        Examples
+        --------
+        """
+        A = col_vector(point)
         B = A + 1
         ray = Ray(A, B)
         ints = intersection_ray_poly(ray, self)
@@ -827,7 +865,45 @@ class Polygon(GObject):
         return self.intersection(obj)
 
 
-def convex_hull(*points):
+def convex_hull(*points) -> list[np.ndarray]:
+    """Returns the convex hull of ``points``. 
+
+    Parameters
+    ----------
+    *points : np.ndarray, list or tuple
+        The points whose convex hull you want to find.
+
+    Returns
+    -------
+    list
+        The list of all of points on the convex hull.
+
+    Examples
+    --------
+    >>> from euclid import *
+    >>> import numpy as np
+    >>> rng = np.random.default_rng()
+    >>> points = [col_vector(point) for point in rng.random((100, 2))*10]
+    >>> print(points)
+    [array([[2.00756707],
+           [7.91470412]]), array([[1.01901632],
+           [9.43917478]]), array([[8.63472305],
+           ...,
+           [9.55533233]]), array([[7.87207801],
+           [5.4060051 ]]), array([[6.02948716],
+           [5.29350243]])]
+    >>> hull = convex_hull(*points)
+    >>> print(hull)
+    [array([[5.69873368],
+           [0.07473919]]), array([[9.46265076],
+           [0.08784139]]), array([[9.89536912],
+           ...,
+           [0.76708439]]), array([[3.07070786],
+           [0.08520319]])]
+    """
+    if any([type(obj)!=np.ndarray for obj in points]):
+        points = [col_vector(obj_) for obj_ in points]
+
     #find the point `P` with min y - coordinate
     P = min(points, key=lambda p: p[1,0])
     # get the list of remaining points `Q`
