@@ -8,3 +8,5 @@
 __pycache__/
 old/
 doc/.ipynb_checkpoints/
+dist/
+xeuclid.egg-info/

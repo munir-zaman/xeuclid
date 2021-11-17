@@ -1,4 +1,4 @@
-__version__ = "1.0.0"
+__version__ = "1.0.3"
 
 from .euclid2 import *
 from .euclid3 import *
