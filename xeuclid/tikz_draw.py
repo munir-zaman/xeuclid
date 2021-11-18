@@ -515,9 +515,9 @@ class Tikz():
     def define_color(self, name: str, color: (str, tuple, list)):
 
         if isinstance(color, (tuple, list)) and len(color)==3:
-            self.write(f"\\definecolor{{{name}}}{{rgb}}{{{str(color)[1:-1:]}}}")
+            self.write(f"\\definecolor{{{name}}}{{RGB}}{{{str(color)[1:-1:]}}}")
         elif type(color)==str:
-            self.write(f"\\definecolor{{{name}}}{{rgb}}{{{str(color)}}}")
+            self.write(f"\\definecolor{{{name}}}{{RGB}}{{{str(color)}}}")
         else:
             raise ValueError("``color`` should be of type ``str``, ``tuple`` or ``list``")
 
