@@ -12,8 +12,9 @@ def write_to_file(file_name,text, end="\n"):
         with open(file_name, "a") as file:
             file.write(text + end)
     elif type(text) == list:
+        text = [text_ + end for text_ in text]
         with open(file_name, "a") as file:
-            file.writelines(text + end)
+            file.writelines(text)
 
 def readlines_file(file_name):
     with open(file_name, "r") as file:

@@ -58,8 +58,8 @@ def resize_image(image_path, out_path, res=(1080, 1080)):
     del img_
     del img
 
-def is_nonempty_string(string):
-    """ returns True if `string` is a non-empty str """
+def is_nonempty_string(string) -> bool:
+    """ returns True if ``string`` is a non-empty ``str`` or ``None`` """
     out = False
     if string is None:
         out = False
@@ -658,9 +658,9 @@ class Tikz():
         draw_point_code=f"\\filldraw{Config} ({X},{Y}) circle ({radius});"
         self.write(draw_point_code)
 
-    def draw_points(self, *points, **kwordargs):
+    def draw_points(self, *points, **kwargs):
         for point in points:
-            self.draw_point(point, **kwordargs)
+            self.draw_point(point, **kwargs)
 
     def draw_vector(self, vector, start=origin,
                                   color="Black",
@@ -946,6 +946,44 @@ class Tikz():
 
         code = f"\\draw{Config} plot[{plot_Config} smooth] file " + "{"+ file_path.replace("\\","/") +"};"
         self.write(code)
+
+    def smooth_plot_from_func(self, func,
+                                    x_range=[-5, 5],
+                                    samples=1000, 
+                                    **kwargs):
+
+        try:
+            os.mkdir('tables')
+        except FileExistsError:
+            pass
+
+        doc = func.__doc__ if not func.__doc__ is None else ""
+
+        indexes = []
+        for file in os.listdir(os.path.join(os.getcwd(), 'tables')):
+            if file.endswith('.table') and file.startswith('table_') and is_number(file.split(".")[0][6::]):
+                indexes.append(int(file.split(".")[0][6::]))
+        index = max(indexes) + 1 if not len(indexes)==0 else 0
+
+        table_name = f"table_{index}.table"
+        table_path = os.path.join(os.getcwd(), 'tables', table_name)
+        table = File(table_path)
+        table.create()
+
+        doc_text = ["#"+line for line in doc.splitlines()]
+        write_to_file(table_path, doc_text)
+        # write the docstring of the function as comment
+
+        X = np.linspace(*x_range, samples)
+        Y = np.vectorize(func)(X)
+
+        for x,y in zip(X, Y):
+            write_to_file(table_path, f"{x} {y}")
+
+        # write point data
+
+        self.smooth_plot_from_file(os.path.join('tables', table_name), **kwargs)
+
 
     def smooth_plot_from_points(self, points, config=def_path_config, plot_config=""):
 
