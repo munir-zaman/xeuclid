@@ -865,7 +865,7 @@ class Polygon(GObject):
         return self.intersection(obj)
 
 
-def convex_hull(*points) -> list[np.ndarray]:
+def convex_hull(*points) -> list:
     """Returns the convex hull of ``points``. 
 
     Parameters
