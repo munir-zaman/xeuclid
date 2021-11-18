@@ -334,6 +334,7 @@ class Path:
             rounded_corners="0pt",
             fill="Black!5", 
             draw="Black",
+            pos=None,
             line_width="thin",
             opacity=1,
             scale=1,
@@ -363,13 +364,20 @@ class Path:
 
         scale = str(scale)
 
-        _fill_code = f"fill={fill}," if not fill is None else ""
-        _draw_code = f"draw={draw}," if not draw is None else ""
+        if pos is None:
+            pos_code = ""
+        elif isinstance(pos, (float, int)):
+            pos_code = f"pos={pos},"
+        else:
+            raise ValueError("``pos`` should be an ``int``, ``float`` or ``None``")
+
+        fill_code = f"fill={fill}," if not fill is None else ""
+        draw_code = f"draw={draw}," if not draw is None else ""
 
         code =      f"node " \
-                +   f"[{_fill_code}{_draw_code}{config}" \
-                +   f",opacity={opacity},line width={line_width}" \
-                +   f",rounded corners={rounded_corners},{shape},scale={scale}]" \
+                +   f"[{fill_code}{draw_code}{config}" \
+                +   f",opacity={opacity},line width={line_width},{pos_code}" \
+                +   f"rounded corners={rounded_corners},{shape},scale={scale}]" \
                 +    " {"+text+"} "
 
         self._code += code
