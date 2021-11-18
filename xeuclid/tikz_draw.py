@@ -207,6 +207,7 @@ class Node:
                             fill="Black!5", 
                             draw="Black",
                             pos=(0,0),
+                            anchor="center",
                             line_width="thin",
                             opacity=1,
                             scale=1,
@@ -240,6 +241,24 @@ class Node:
 
         self.scale = str(scale)
 
+        anchor_dict = { 'nw':"north west",
+                        'ne':"north east",
+                        "se":"south east",
+                        "sw": "south west",
+                        "n" : "north",
+                        "s" : "south"
+                    }
+
+        if is_nonempty_string(anchor):
+            if anchor in anchor_dict.keys():
+                anchor = anchor_dict[anchor]
+            else:
+                anchor = anchor
+        else:
+            anchor = 'center'
+
+        self.anchor = anchor
+
     def parse_pos(self, pos: str) -> str:
         return parse_pos(pos)
 
@@ -250,7 +269,7 @@ class Node:
 
         self._code =        f"\\node ({self.name}) at {self.pos_str} " \
                         +   f"[{_fill_code}{_draw_code}{self.config}" \
-                        +   f",opacity={self.opacity},line width={self.line_width}" \
+                        +   f",opacity={self.opacity},line width={self.line_width},anchor={self.anchor}" \
                         +   f",rounded corners={self.rounded_corners},{self.shape},scale={self.scale}]" \
                         +    " {"+self.text+"};"
 
@@ -926,7 +945,7 @@ class Tikz():
         self.write(draw_circle_code)
 
     def draw_polygon(self, poly: Polygon, **kwargs):
-        self.draw_path(*poly.vertices, **kwargs)
+        self.draw_path(*poly.vertices, cycle=True, **kwargs)
 
     def node(self, position, node_config=def_node_config , config=def_node_draw_config, text=""):
         X,Y=row_vector(position)
