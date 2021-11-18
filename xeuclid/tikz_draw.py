@@ -7,6 +7,7 @@ import PIL
 import xeuclid.tikzrc as tikz_config 
 import sympy
 import scipy
+import types
 
 RND8=np.vectorize(lambda x: round(x, 8))
 
@@ -376,7 +377,7 @@ class Path:
 
 
 class Tikz():
-    def __init__(self,file_name, preamble=tikz_config.default_preamble):
+    def __init__(self, file_name: str, preamble=tikz_config.default_preamble):
         if not file_name is None:
             try:
                 create_file(file_name)
@@ -387,6 +388,8 @@ class Tikz():
             if preamble!=None:
                 write_to_file(file_name,preamble)
                 #writes the preamble
+            if not file_name.endswith(".tex"):
+                print('WARNING: FILE EXTENSION SHOULD BE .tex')
         else:
             self.tex_code = ""
         self.file_name=file_name
@@ -404,7 +407,7 @@ class Tikz():
     def get_len_value(self, value, default_unit='cm') -> str:
         return get_len_value(value, default_unit=default_unit)
 
-    def write(self,text):
+    def write(self,text: str):
         if not self.file_name is None:
             write_to_file(self.file_name,text)
         else:
@@ -497,12 +500,36 @@ class Tikz():
 
         self.magick_convert(out_file=out_file, args=args)
 
-
     def usepackage(self, package, config=None):
         if not is_nonempty_string(config):
-            self.write("\\usepackage{"+ package +"}")
+            self.write(f"\\usepackage{{{package}}}")
         else:
-            self.write("\\usepackage["+ config +"]{"+ package +"}")
+            self.write(f"\\usepackage[{config}]{{{package}}}")
+
+    def usetikzlibrary(self, lib):
+        if type(lib)==str:
+            self.write(f"\\usetikzlibrary{{{lib}}}")
+        else:
+            raise ValueError("``lib`` should be of type ``str``")
+
+    def define_color(self, name: str, color: (str, tuple, list)):
+
+        if isinstance(color, (tuple, list)) and len(color)==3:
+            self.write(f"\\definecolor{{{name}}}{{rgb}}{{{str(color)[1:-1:]}}}")
+        elif type(color)==str:
+            self.write(f"\\definecolor{{{name}}}{{rgb}}{{{str(color)}}}")
+        else:
+            raise ValueError("``color`` should be of type ``str``, ``tuple`` or ``list``")
+
+    def define_colors_from_dict(self, colors: dict):
+        for color_name in colors.keys():
+            self.define_color(color_name, colors[color_name])
+
+    def pagecolor(self, color):
+        if color is None:
+            self.write("\\nopagecolor")
+        elif type(color)==str:
+            self.write(f"\\pagecolor{{{color}}}")
 
     def clip(self, x_range=[-5,5], y_range=[-5,5]):
         xmin,xmax=x_range
@@ -709,7 +736,14 @@ class Tikz():
         fill_path_code=f"\\fill{Config}  "+path_string
         self.write(fill_path_code)
 
-    def mark_segment(self, start, end, ticks=2, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=tikz_config.path_config):
+    def mark_segment(self,  start, 
+                            end, 
+                            ticks=2, 
+                            tick_len=0.2, 
+                            tick_dist=0.2, 
+                            tick_pos=None, 
+                            tick_config=tikz_config.path_config):
+
         A = start
         B = end
         l = Line(A, B)
@@ -723,7 +757,15 @@ class Tikz():
             tick_B = rotate(Point, A, -Theta)
             self.draw_path(tick_A, tick_B, config=tick_config)
 
-    def draw_segment(self, segment, ticks=0, tick_len=0.2, tick_dist=0.2, tick_pos=None, tick_config=tikz_config.path_config, end_points=False, end_point_config=tikz_config.point_config):
+    def draw_segment(self, segment, 
+                           ticks=0, 
+                           tick_len=0.2, 
+                           tick_dist=0.2, 
+                           tick_pos=None, 
+                           tick_config=tikz_config.path_config, 
+                           end_points=False, 
+                           end_point_config=tikz_config.point_config):
+
         start, end = segment.A, segment.B
         self.draw_path(start, end)
         self.mark_segment(start, end, ticks=ticks, tick_len=tick_len, tick_dist=tick_dist, tick_pos=tick_pos, tick_config=tick_config)
@@ -874,7 +916,7 @@ class Tikz():
         self.write(arc_code)
         self.write(tick_code)
 
-    def draw_circle(self, circle, config=tikz_config.circle_config):
+    def draw_circle(self, circle: Circle, config=tikz_config.circle_config):
         Cx, Cy= RND8(row_vector(circle.center))
         radius= round(circle.radius, 8)
 
@@ -882,6 +924,9 @@ class Tikz():
 
         draw_circle_code=f"\\draw{draw_Config} ({Cx}, {Cy}) circle ({radius});"
         self.write(draw_circle_code)
+
+    def draw_polygon(self, poly: Polygon, **kwargs):
+        self.draw_path(*poly.vertices, **kwargs)
 
     def node(self, position, node_config=def_node_config , config=def_node_draw_config, text=""):
         X,Y=row_vector(position)
@@ -1009,11 +1054,34 @@ class Tikz():
 
         return texcode
 
-    def add(self, obj):
-        if type(obj) is Path:
+    def add(self, obj, **kwargs):
+
+        if type(obj) == Path:
             self.write(obj.code())
-        elif type(obj) is Node:
+
+        elif type(obj) == Node:
             self.write(obj.code())
+
+        elif isinstance(obj, (tuple, list, np.ndarray)) and len(row_vector(obj))==2:
+            self.draw_point(col_vector(obj), **kwargs)
+
+        elif isinstance(obj, Line):
+            self.draw_line(obj, **kwargs)
+
+        elif isinstance(obj, Ray):
+            self.draw_ray(obj, **kwargs)
+
+        elif isinstance(obj, Segment):
+            self.draw_segment(obj, **kwargs)
+
+        elif isinstance(obj, Circle):
+            self.draw_circle(obj, **kwargs)
+
+        elif isinstance(obj, Polygon):
+            self.draw_polygon(obj, **kwargs)
+
+        else:
+            raise ValueError("couldn't add ``obj``.")
 
     def draw_triangulation(self, points, **pathargs):
         # triangulation

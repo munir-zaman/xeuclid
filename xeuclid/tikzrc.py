@@ -1,27 +1,23 @@
 
-default_preamble="""%tikz_draw
-\\documentclass[11pt,a4paper, svgnames]{article}
+default_preamble="""\\documentclass[11pt,a4paper, svgnames]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[english]{babel}
+\\usepackage{xcolor}
 \\usepackage{amsmath}
 \\usepackage{amsfonts}
 \\usepackage{amssymb}
 \\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
 \\usepackage{tikz}
-%tikzlibrary
 \\usetikzlibrary{arrows.meta}
-%preamble
 """
-standalone="""%tikz_draw
-\\documentclass[tikz, border=5, svgnames]{standalone}
+standalone="""\\documentclass[tikz, border=5, svgnames]{standalone}
 \\usepackage[utf8]{inputenc}
 \\usepackage[english]{babel}
+\\usepackage{xcolor}
 \\usepackage{amsmath}
 \\usepackage{amsfonts}
 \\usepackage{amssymb}
-%tikzlibrary
 \\usetikzlibrary{arrows.meta}
-%standalone preamble
 """
 
 
