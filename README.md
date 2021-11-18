@@ -1,5 +1,7 @@
-`xeuclid` is a project of mine that I've been working on for the past few months. It's a set of python scripts 
-that lets you do analytic geometry in `python`. You can also draw TikZ diagrams using `tikz_draw.py`. 
+[`xeuclid`](https://pypi.org/project/xeuclid/) is a project of mine that 
+I've been working on for the past few months. 
+It's a set of python scripts that lets you do analytic geometry in `python`. 
+You can also draw TikZ diagrams using `tikz_draw.py`. 
 **It's a work in progress.** 
 The following python packages are required to use `xeuclid`,
 
@@ -9,10 +11,20 @@ The following python packages are required to use `xeuclid`,
 * [`pdf2image`](https://pypi.org/project/pdf2image/)
 * [`Pillow`](https://pypi.org/project/Pillow/)
 
-To use `tikz_draw.py` you have to have `LaTeX` and `tikz` package installed.
+To use `tikz_draw.py` you have to have `LaTeX` and `tikz` package installed. You might also need to install
+ [ImageMagick](https://imagemagick.org/index.php).
+
+# Installation
+
+You can easily install `xeuclid` using `pip`.
+
+```console
+$ pip install xeuclid
+```
+
 # Example Usage
 
-You can find more examples in `docs\example_usage_files\`.
+You can find more examples in [`docs\example_usage_files\`](https://github.com/MunirZaman/xeuclid/tree/master/docs/example_usage_files).
 
 ```python
 from xeuclid import *
