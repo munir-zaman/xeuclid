@@ -11,10 +11,31 @@ import scipy
 RND8=np.vectorize(lambda x: round(x, 8))
 
 def clean_latex(del_tex = False):
+    """Deletes all ``*.aux``, ``*.log`` and ``*.gz`` files in the directory.
+
+    Parameters
+    ----------
+    del_tex : bool
+        If set to ``True`` then all ``*.tex`` files will also be deleted.
+    """
     latex_extn = "*.aux *.log *.gz" if not del_tex else "*.tex *.aux *.log *.gz"
     os.system(f"del {latex_extn}")
 
-def convert_pdf(path, file_type="png", dpi=600, out_path=None, name="page"):
+def convert_pdf(path : str, file_type : str ="png", dpi : int =600, out_path=None, name : str ="page"):
+    """Converts the pdf file withe specified path ``path`` to the specified file type ``file_type``.
+
+    Parameters
+    ----------
+    path : str
+        The path to the pdf file
+    file_type : str
+        The file type you want to convert to
+    dpi : int
+        dpi of the converted file type
+    out_path : None or str
+        Output Path of the converted file
+
+    """
     if out_path is None:
         out_path = os.getcwd()
     convert_from_path(str(path), dpi=dpi, output_folder=out_path, fmt=file_type, output_file=name)
@@ -36,7 +57,7 @@ def resize_image(image_path, out_path, res=(1080, 1080)):
     del img_
     del img
 
-def _is_nonempty_string(string):
+def is_nonempty_string(string):
     """ returns True if `string` is a non-empty str """
     out = False
     if string is None:
@@ -105,7 +126,7 @@ def is_number(s):
     except ValueError:
         return False
 
-def _get_len_value(value, default_unit='cm') -> str:
+def get_len_value(value, default_unit='cm') -> str:
 
     line_width_dict = {
                 "ultra thin": 0.1, 
@@ -134,24 +155,44 @@ def _get_len_value(value, default_unit='cm') -> str:
 
     return out
 
-def _parse_pos(pos):
+def parse_pos(pos):
+
     if type(pos) == tuple or type(pos) == list or type(pos) == np.ndarray:
         x, y = row_vector(pos)
         out = f"({x}cm, {y}cm)"
+
     elif type(pos) == str:
+
+        #(x, y)
         if len(pos.split(",")) == 2:
             X_, Y_ = pos.split(",")
             X_, Y_ = X_.strip(), Y_.strip()
             if (X_[0]=="(") and (Y_[-1]==")"):
-                X_ = X_[1::]
-                Y_ = Y_[0:-1:]
-                print(X_, Y_)
-            x, y = _get_len_value(X_), _get_len_value(Y_)
+                X_ = X_[1::].strip()
+                Y_ = Y_[0:-1:].strip()
+
+            x, y = get_len_value(X_), get_len_value(Y_)
             out = f"({x}, {y})"
+
+        #(theta: r)
+        elif len(pos.split(":")) == 2:
+            t_, r_ = pos.split(":")
+            t_, r_ = t_.strip(), r_.strip()
+            if (t_[0]=="(") and (r_[-1]==")"):
+                t_ = t_[1::].strip()
+                r_ = r_[0:-1:].strip()
+
+            t, r = get_len_value(t_), r_
+            out = f"({t}:{r})"
+        
+        #cycle
         elif pos.strip() == 'cycle':
             out = 'cycle'
+
+        # A -> (A)
         elif not (pos[0]=="(" and pos[-1]==")"):
             out = f"({pos})"
+        
         else:
             out = pos
 
@@ -166,32 +207,58 @@ class Node:
                             draw="Black",
                             pos=(0,0),
                             line_width="thin",
-                            opacity="1",
+                            opacity=1,
                             scale=1,
-                            text=" "):
+                            text=" ",
+                            config=""):
+
         self.name = str(name)
         self.shape = shape
-        self.fill = fill
-        self.draw = draw
-        self.pos_str = self._parse_pos(pos)
-        self.config = ""
-        self.line_width = _get_len_value(line_width, default_unit='pt')
-        self.rounded_corners = _get_len_value(rounded_corners, default_unit="pt")
+        self.pos_str = self.parse_pos(pos)
+        self.config = config
+        self.line_width = get_len_value(line_width, default_unit='pt')
+        self.rounded_corners = get_len_value(rounded_corners, default_unit="pt")
         self.opacity = str(opacity)
-        self.text = str(text)
+
+        if type(fill)==str and fill.strip()=="":
+            self.fill = None
+        else:
+            self.fill = fill
+
+        if type(draw)==str and draw.strip()=="":
+            self.draw = None
+        else:
+            self.draw = draw
+
+        if text is None:
+            self.text = " "
+        elif type(text)==str and text.strip()=="":
+            self.text = " "
+        else:
+            self.text = str(text)
+
         self.scale = str(scale)
 
-    def _parse_pos(self, pos: str) -> str:
-        return _parse_pos(pos)
+    def parse_pos(self, pos: str) -> str:
+        return parse_pos(pos)
 
     def _gen_code(self):
-        self._code = f"\\node ({self.name}) at {self.pos_str} [fill={self.fill},draw={self.draw},{self.config},opacity={self.opacity},line width={self.line_width},rounded corners={self.rounded_corners},{self.shape},scale={self.scale}]"
-        self._code += " {"+self.text+"};"
-    
+
+        _fill_code = f"fill={self.fill}," if not self.fill is None else ""
+        _draw_code = f"draw={self.draw}," if not self.draw is None else ""
+
+        self._code =        f"\\node ({self.name}) at {self.pos_str} " \
+                        +   f"[{_fill_code}{_draw_code}{self.config}" \
+                        +   f",opacity={self.opacity},line width={self.line_width}" \
+                        +   f",rounded corners={self.rounded_corners},{self.shape},scale={self.scale}]" \
+                        +    " {"+self.text+"};"
+
     def code(self):
         self._gen_code()
         return self._code
 
+
+#TODO
 class Path:
     def __init__(self,  color="Black",
                         opacity="1",
@@ -200,24 +267,24 @@ class Path:
                         line_cap="round",
                         rounded_corners="1pt",
                         config=""):
+
+        self.color = color
+        self.opacity = opacity
+        self.line_width = line_width
+        self.style = style
+        self.line_cap = line_cap
+        self.rounded_corners = rounded_corners
+        self.config = config
         self._code = ""
-        self._code += "\\draw["
-        self._code += f"color={color},"
-        self._code += f"opacity={opacity},"
-        self._code += f"line width="+_get_len_value(line_width, default_unit="pt")+","
-        self._code += f"{style},"
-        self._code += f"line cap={line_cap},"
-        self._code += f"rounded corners={rounded_corners},"
-        self._code += f"{config},]"
 
     def at(self, pos):
-        parsed_pos = _parse_pos(pos)
-        self._code += f" {parsed_pos}"
+        parsed_pos = parse_pos(pos)
+        self._code += f"{parsed_pos} "
         return self
 
     def line_to(self ,pos, line_type="--"):
-        parsed_pos = _parse_pos(pos)
-        self._code += f" {line_type} {parsed_pos}"
+        parsed_pos = parse_pos(pos)
+        self._code += f"{line_type} {parsed_pos} "
         return self
 
     def to(self, pos,
@@ -227,7 +294,7 @@ class Path:
                  Out=None,
                  config=""):
 
-        parsed_pos = _parse_pos(pos)
+        parsed_pos = parse_pos(pos)
 
         code = f"{config},"
         if not bend_left is None:
@@ -239,15 +306,72 @@ class Path:
         if not Out is None:
             code+= f"out={Out},"
 
-        self._code += f" to[{code}] {parsed_pos}"
+        self._code += f"to[{code}] {parsed_pos} "
+        return self
+
+    def node(self,
+            shape="circle",
+            rounded_corners="0pt",
+            fill="Black!5", 
+            draw="Black",
+            line_width="thin",
+            opacity=1,
+            scale=1,
+            text=" ",
+            config=""):
+
+        line_width = get_len_value(line_width, default_unit='pt')
+        rounded_corners = get_len_value(rounded_corners, default_unit="pt")
+        opacity = str(opacity)
+
+        if type(fill)==str and fill.strip()=="":
+            fill = None
+        else:
+            fill = fill
+
+        if type(draw)==str and draw.strip()=="":
+            draw = None
+        else:
+            draw = draw
+
+        if text is None:
+            text = " "
+        elif type(text)==str and text.strip()=="":
+            text = " "
+        else:
+            text = str(text)
+
+        scale = str(scale)
+
+        _fill_code = f"fill={fill}," if not fill is None else ""
+        _draw_code = f"draw={draw}," if not draw is None else ""
+
+        code =      f"node " \
+                +   f"[{_fill_code}{_draw_code}{config}" \
+                +   f",opacity={opacity},line width={line_width}" \
+                +   f",rounded corners={rounded_corners},{shape},scale={scale}]" \
+                +    " {"+text+"} "
+
+        self._code += code
         return self
 
     def close(self):
-        self._code += " ;"
+        self._code += ";"
         return self
 
     def code(self):
-        return self._code
+
+        self._draw_code = ""
+        self._draw_code += "\\draw["
+        self._draw_code += f"color={self.color},"
+        self._draw_code += f"opacity={self.opacity},"
+        self._draw_code += f"line width="+ get_len_value(self.line_width, default_unit="pt") +","
+        self._draw_code += f"{self.style},"
+        self._draw_code += f"line cap={self.line_cap},"
+        self._draw_code += f"rounded corners={self.rounded_corners},"
+        self._draw_code += f"{self.config},] "
+
+        return self._draw_code + self._code
 
 
 
@@ -277,8 +401,8 @@ class Tikz():
             "ultra thick": 1.6
         }
 
-    def _get_len_value(self, value, default_unit='cm') -> str:
-        return _get_len_value(value, default_unit=default_unit)
+    def get_len_value(self, value, default_unit='cm') -> str:
+        return get_len_value(value, default_unit=default_unit)
 
     def write(self,text):
         if not self.file_name is None:
@@ -301,7 +425,7 @@ class Tikz():
         os.system(f'{editor} {self.file_name}')
 
     def begin(self,env,config=None):
-        Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        Config=f"[{config}]" if is_nonempty_string(config) else ""
         self.write('\\begin{'+env+'}'+f"{Config}"+'\n')
 
     def end(self,env):
@@ -347,8 +471,35 @@ class Tikz():
         if clean:
             clean_latex()
 
+    def magick_convert(self, out_file=None, args: str=""):
+        if out_file is None:
+            out_file = os.path.join(os.getcwd(), self.file_name.replace('.tex', '.png'))
+
+        out_file = out_file.strip()
+        if " " in out_file:
+            out_file = f"\"{out_file}\""
+
+        if self.file_name.replace('.tex', '.pdf') not in os.listdir():
+            self.pdf(shell_escape=True, batch=True)
+        file_path = os.path.join(os.getcwd(), self.file_name.replace('.tex', '.pdf'))
+
+        file_path = file_path.strip()
+        if " " in file_path:
+            file_path = f"\"{file_path}\""
+
+        os.system(f"magick convert {args} {file_path} {out_file}")
+
+    def magick_png(self, out_file: str=None, dpi: int=800, antialias: bool=True, resize=None):
+        args = ''
+        args += f"-density {dpi} "
+        args += f"-antialias " if antialias else ""
+        args += f"-resize {resize}%" if type(resize)==int else ""
+
+        self.magick_convert(out_file=out_file, args=args)
+
+
     def usepackage(self, package, config=None):
-        if not _is_nonempty_string(config):
+        if not is_nonempty_string(config):
             self.write("\\usepackage{"+ package +"}")
         else:
             self.write("\\usepackage["+ config +"]{"+ package +"}")
@@ -419,8 +570,20 @@ class Tikz():
             code += tick_labels_code
 
         if (type(axis_labels)==list or type(axis_labels)==tuple):
-            self.node(x_vect*x_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[0])
-            self.node(y_vect*y_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[1])
+
+            if type(axis_labels[0])==str:
+                self.node(x_vect*x_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[0])
+
+            elif isinstance(axis_labels[0], (tuple, list)) and len(axis_labels[0])==2:
+                self.node(x_vect*x_range[0], node_config=f"anchor= north west, {axis_labels_config}", text=axis_labels[0][0])
+                self.node(x_vect*x_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[0][1])
+
+            if type(axis_labels[1])==str:
+                self.node(y_vect*y_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[1])
+
+            elif isinstance(axis_labels[1], (tuple, list)) and len(axis_labels[1])==2:
+                self.node(y_vect*y_range[0], node_config=f"anchor= south east, {axis_labels_config}", text=axis_labels[1][0])
+                self.node(y_vect*y_range[1], node_config=f"anchor= north east, {axis_labels_config}", text=axis_labels[1][1])
 
         self.write(code)
 
@@ -439,10 +602,10 @@ class Tikz():
         xmin,xmax=x_range
         ymin,ymax=y_range
 
-        _line_width = self._get_len_value(line_width)
-        step = self._get_len_value(step)
-        xshift = self._get_len_value(xshift)
-        yshift = self._get_len_value(yshift)
+        _line_width = self.get_len_value(line_width)
+        step = self.get_len_value(step)
+        xshift = self.get_len_value(xshift)
+        yshift = self.get_len_value(yshift)
 
         Config = f"[step={step},line width={_line_width},line cap={line_cap},xshift={xshift},yshift={yshift},{color},opacity={opacity},{style},{config}]"
 
@@ -460,8 +623,8 @@ class Tikz():
         X,Y=row_vector(point)
         X,Y=round(X, 8),round(Y, 8)
 
-        radius = self._get_len_value(radius, default_unit="pt")
-        line_width = self._get_len_value(line_width)
+        radius = self.get_len_value(radius, default_unit="pt")
+        line_width = self.get_len_value(line_width)
 
         Config=f"[line width={line_width}, fill={fill_color}, draw={color},opacity={opacity},{config}]"
 
@@ -489,7 +652,7 @@ class Tikz():
         X,Y=row_vector(vector)
         X,Y=round(X, 8),round(Y, 8)
 
-        line_width = self._get_len_value(line_width, default_unit="pt")
+        line_width = self.get_len_value(line_width, default_unit="pt")
         Config = f"[{color},opacity={opacity},line width={line_width},line cap={line_cap},{arrow_tip},{config},{style}]"
 
         if (not np.isnan(vector).any()) and (X!=0 or Y!=0):
@@ -511,8 +674,8 @@ class Tikz():
                         line_cap="round",
                         cycle=False):
 
-        line_width = self._get_len_value(line_width, default_unit='pt')
-        rounded_corners = self._get_len_value(rounded_corners, default_unit='pt')
+        line_width = self.get_len_value(line_width, default_unit='pt')
+        rounded_corners = self.get_len_value(rounded_corners, default_unit='pt')
 
         points_xy=[(round(p[0,0], 8), round(p[1,0], 8)) for p in points]
         path_string=""
@@ -581,7 +744,7 @@ class Tikz():
                         line_cap="round",
                         style="solid"):
 
-        line_width = self._get_len_value(line_width, default_unit="pt")
+        line_width = self.get_len_value(line_width, default_unit="pt")
 
         xmin, xmax=x_range
         ymin, ymax=y_range
@@ -659,7 +822,7 @@ class Tikz():
         p1=tuple(RND8(row_vector(ray.A)))
         p2=tuple(RND8(row_vector(P)))
 
-        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        draw_Config=f"[{config}]" if is_nonempty_string(config) else ""
         ray_draw_code=f"\\draw{draw_Config} {p1} -- {p2};"
 
         self.write(ray_draw_code)
@@ -674,9 +837,9 @@ class Tikz():
 
         Angle, start_angle, end_angle = round(Angle, 8), round(start_angle, 8), round(end_angle, 8)
 
-        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
-        fill_Config=f"[{fill_config}]" if _is_nonempty_string(fill_config) else ""
-        tick_Config=f"[{tick_config}]" if _is_nonempty_string(tick_config) else ""
+        draw_Config=f"[{config}]" if is_nonempty_string(config) else ""
+        fill_Config=f"[{fill_config}]" if is_nonempty_string(fill_config) else ""
+        tick_Config=f"[{tick_config}]" if is_nonempty_string(tick_config) else ""
 
         if (not right_angle) or (not isclose(Angle, 90)):
             draw_angle_code=f"\\draw{draw_Config}  ([shift=({start_angle}:{radius})]{Bx},{By}) arc[start angle={start_angle}, end angle={end_angle}, radius={radius}];"
@@ -715,7 +878,7 @@ class Tikz():
         Cx, Cy= RND8(row_vector(circle.center))
         radius= round(circle.radius, 8)
 
-        draw_Config=f"[{config}]" if _is_nonempty_string(config) else ""
+        draw_Config=f"[{config}]" if is_nonempty_string(config) else ""
 
         draw_circle_code=f"\\draw{draw_Config} ({Cx}, {Cy}) circle ({radius});"
         self.write(draw_circle_code)
@@ -724,8 +887,8 @@ class Tikz():
         X,Y=row_vector(position)
         X,Y=round(X, 8), round(Y, 8)
 
-        Config=f"[{config}]" if _is_nonempty_string(config) else ""
-        node_Config=f"[{node_config}]" if _is_nonempty_string(node_config) else ""
+        Config=f"[{config}]" if is_nonempty_string(config) else ""
+        node_Config=f"[{node_config}]" if is_nonempty_string(node_config) else ""
 
         node_code=f"\\draw{Config} {X,Y} node {node_Config} "+"{"+f"{text}"+"};"
 
@@ -733,16 +896,16 @@ class Tikz():
 
     def smooth_plot_from_file(self, file_path, config=tikz_config.path_config, plot_config=""):
 
-        Config=f"[{config}]" if _is_nonempty_string(config) else ""
-        plot_Config=f"{plot_config}," if _is_nonempty_string(plot_config) else ""
+        Config=f"[{config}]" if is_nonempty_string(config) else ""
+        plot_Config=f"{plot_config}," if is_nonempty_string(plot_config) else ""
 
         code = f"\\draw{Config} plot[{plot_Config} smooth] file " + "{"+ file_path.replace("\\","/") +"};"
         self.write(code)
 
     def smooth_plot_from_points(self, points, config=def_path_config, plot_config=""):
 
-        Config=f"[{config}]" if _is_nonempty_string(config) else ""
-        plot_Config=f"{plot_config}," if _is_nonempty_string(plot_config) else ""
+        Config=f"[{config}]" if is_nonempty_string(config) else ""
+        plot_Config=f"{plot_config}," if is_nonempty_string(plot_config) else ""
 
         points_string=""
         for point in points:
@@ -788,7 +951,7 @@ class Tikz():
         for p in points:
             V = func(p)
             grad_code = f"{grad[1]}!{get_grad_value(V)}!{grad[0]}"
-            Config = f"{grad_code}, {config}" if _is_nonempty_string(config) else f"{grad_code}"
+            Config = f"{grad_code}, {config}" if is_nonempty_string(config) else f"{grad_code}"
             self.draw_vector(normalize_func(V), start=p, config=Config, arrow_tip=arrow_tip)
 
     def pgfplots_begin_axis(self, config=None, show_axis_lines=False, x_range=(-10, 10), y_range=(-10, 10)):
@@ -817,7 +980,7 @@ class Tikz():
 
     def pgfplots_addplot_from_expr(self, expr, samples=500, domain=(-5, 5), config=tikz_config.path_config):
         Expr = expr.replace("**", "^")
-        Config = f"[{config}, samples={samples}, domain={domain[0]}:{domain[1]}]" if _is_nonempty_string(config) else f"[samples={samples}, domain={domain[0]}:{domain[1]}]"
+        Config = f"[{config}, samples={samples}, domain={domain[0]}:{domain[1]}]" if is_nonempty_string(config) else f"[samples={samples}, domain={domain[0]}:{domain[1]}]"
 
         code = f"\\addplot {Config} " + "{"+f"{Expr}"+"};"
         self.write(code)
