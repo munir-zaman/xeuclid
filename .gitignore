@@ -6,8 +6,5 @@
 *.fls
 *.fdb_latexmk
 __pycache__/
-old/
-doc/.ipynb_checkpoints/
 dist/
 xeuclid.egg-info/
-update_.py
