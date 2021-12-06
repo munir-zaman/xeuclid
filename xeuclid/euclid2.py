@@ -1,23 +1,72 @@
 from xeuclid.utils.math import *
 
-
 to_tuple = lambda vector: tuple(row_vector(vector))
 
-
 class GObject(object):
-    """ base class for geometric objects """
+    """Base class for all geometric objects """
     def __init__(self):
         pass
 
 
 origin=np.array([[0],[0]])
 
-rotation_matrix=lambda theta: np.array([[cos(theta),-1*sin(theta)],
-                                        [sin(theta),   cos(theta)]])
+def rotation_matrix(theta):
+    """Returns the matrix, 
+    
+    .. math::
+        \\begin{bmatrix}
+            \\cos(\\theta) & -\\sin(\\theta) \\\\
+            \\sin(\\theta) &  \\cos(\\theta)
+        \\end{bmatrix}
 
-#rotate=lambda A,B,theta: np.matmul(rotation_matrix(theta),A-B)+B
+    Parameters
+    ----------
+    theta : float, int
+        The value of :math:`\\theta`
+
+    Returns
+    -------
+    np.ndarray
+        Returns the matrix.
+
+    Examples
+    --------
+    >>> from xeuclid import *
+    >>> rotation_matrix(30)
+    array([[ 0.8660254, -0.5      ],
+           [ 0.5      ,  0.8660254]])
+    """
+    return np.array([[cos(theta),-1*sin(theta)],
+                     [sin(theta),   cos(theta)]])
 
 def rotate(point, center, angle):
+    """Rotates ``point`` around ``center`` by an angle of ``angle``.
+
+    Parameters
+    ----------
+    point: np.ndarray
+        The point to rotate
+    center: np.ndarray
+        Center of rotation
+    angle: float
+        Angle of rotation
+
+    Returns
+    -------
+    np.ndarray
+        The rotated point
+
+    Examples
+    --------
+    >>> from xeuclid import *
+    >>> P = col_vector([1, 3])
+    >>> O = col_vector([1, 1])
+    >>> Q = rotate(P, O, 30)
+    >>> Q
+    array([[2.22044605e-16],
+           [2.73205081e+00]])
+    """
+    point, center = col_vector(point), col_vector(center)
     return np.matmul(rotation_matrix(angle),point-center)+center
 
 def dilate(point, center, factor):
@@ -32,11 +81,11 @@ def reflect_about_line(point, line):
 
 
 def angle(A,B,C) -> float:
-    """returns the angle :math:`\\angle ABC`. The equation used to compute the angle is,
+    """Returns the angle :math:`\\angle ABC`. The equation used to compute the angle is,
 
     .. math::
-        \\angle ABC = 
-        \\mathrm{atan2}\\left( {C_y - B_y},\\ {C_x - B_x} \\right) - 
+        \\angle ABC =
+        \\mathrm{atan2}\\left( {C_y - B_y},\\ {C_x - B_x} \\right) -
         \\mathrm{atan2}\\left( {A_y - B_y},\\ {A_x - B_x} \\right)
         \\pmod{360^{\\circ}}
 
@@ -55,7 +104,7 @@ def angle(A,B,C) -> float:
     Returns
     -------
     float
-        The angle :math:`\\angle ABC` 
+        The angle :math:`\\angle ABC`
 
     Examples
     --------
@@ -86,7 +135,22 @@ def angle_between_vectors(v1,v2):
     return angle(v1, origin, v2)
 
 def angle_bisector(A,B,C):
-    """ returns the angle bisector of angle <ABC"""
+    """Returns the angle bisector of :math:`\\angle ABC`
+
+    Parameters
+    ----------
+    A: np.ndarray
+        The point :math:`A`
+    B: np.ndarray
+        The point :math:`B`
+    C: np.ndarray
+        The point :math:`C`
+
+    Returns
+    -------
+    line : Line
+        The angle bisector
+    """
     a1,a2=row_vector(A)
     b1,b2=row_vector(B)
     c1,c2=row_vector(C)
@@ -109,22 +173,31 @@ def angle_bisector(A,B,C):
     return line
 
 def intersection_line_line(line1,line2):
+    """Returns the intersection point of ``line1`` and ``line2``.
 
+    Parameters
+    ----------
+    line1 : Line
+        Line 1
+    line2 : Line
+        Line 2
+
+    Returns
+    -------
+    np.ndarray, None
+        Returns the intersection point if it exists. Otherwise returns ``None``.
+
+    """
     if not (line1 | line2):
-        # if the lines are not parallel
-        # then, they intersect
-
         v1x,v1y=line1.v[0,0],line1.v[1,0]
         v2x,v2y=line2.v[0,0],line2.v[1,0]
-        V=np.array([[v1x,-1*v2x],[v1y,-1*v2y]])
-
+        V=np.array([[v1x,-1*v2x],
+                    [v1y,-1*v2y]])
         A=line2.A-line1.A
         T=system(V, A)
-        #print(T)
         t1=T[0,0]
         out=line1(t1)
     else:
-        #print("The Lines are Parallel. Returned None")
         out=None
 
     return out
@@ -172,6 +245,44 @@ def intersection_segment_segment(segment1,segment2):
 
 
 class Line(GObject):
+    """A ``GObject`` for representing lines. 
+    Lines are represented using the parametric equation,
+
+    .. math::
+        L(t) = (1-t)\\overline{A} + t\\overline{B}
+    
+    where :math:`A` and :math:`B` are two points that are on the line :math:`L(t)`.
+
+    Attributes
+    ----------
+    A : np.ndarray
+        The vector :math:`\\overline{A}`
+    B : np.ndarray
+        The vector :math:`\\overline{B}`
+    v : np.ndarray
+        The vector :math:`\\overline{v} = \\overline{B} - \\overline{A}`
+
+    Examples
+    --------
+    >>> from xeuclid import *
+    >>> l1 = Line([0, 0], [1, 2]) # line through points (0,0) and (1,2)
+    >>> l1
+    [0, 0] +[1, 2]*t
+    >>> l1(1.5) # l1(t) = (1 - t)*(0,0) + t*(1,2)
+    array([[1.5],
+           [3. ]])
+    >>> newl1 = l1 + col_vector([1,1]) # translates the line by (1,1)
+    >>> newl1
+    [1, 1] +[1, 2]*t
+    >>> l2 = Line([1, 3], [-1, -2])
+    >>> l2 | l1 # checks if l1 and l2 are parallel
+    False
+    >>> l1 & l2 # the intersection point of l1 and l2
+    array([[-1.],
+           [-2.]])
+    >>> l1 ^ l2 # checks if l1 and l2 are perpendicular
+    False
+    """
     def __init__(self,A,B):
         self._A = col_vector(A)
         self._B = col_vector(B)
@@ -200,21 +311,51 @@ class Line(GObject):
         value = col_vector(value)
         self._A = value
         self._update_attrs()
-    
+
     @B.setter
     def B(self, value):
         value = col_vector(value)
         self._B = value
         self._update_attrs()
-    
+
     @property
     def type(self):
         return 'line'
 
     def __call__(self,t):
+        """Evaluates the value of the function,
+
+        .. math::
+            L(t) = \\overline{A} + \\overline{v}t
+
+        Parameters
+        ----------
+        t : float,int
+            The value of :math:``t.
+
+        Returns
+        -------
+        float,int
+            The evaluated value of :math:`L(t)`
+        """
         return (self.A+self.v*t)
 
     def normt(self, t):
+        """Evaluates the value of the function,
+
+        .. math::
+            L'(t) = \\overline{A} + \\frac{\\overline{v}}{|v|}t
+
+        Parameters
+        ----------
+        t : float, int
+            The value of :math:`t`.
+
+        Returns
+        -------
+        float,int
+            The evaluated value of :math:`L'(t)`
+        """
         return self.A + norm(self.v) * t
 
     def __repr__(self):
@@ -223,11 +364,37 @@ class Line(GObject):
     def __str__(self):
         return str(f"[{self.A[0,0]}, {self.A[1,0]}] +[{self.v[0,0]}, {self.v[1,0]}]*t")
 
-    def __contains__(self, point):
+    def __contains__(self, point) -> bool:
+        """Checks if ``point`` is on the line.
+
+        Parameters
+        ----------
+        point : np.ndarray 
+            The point
+
+        Returns
+        -------
+        bool
+            returns ``True`` if ``point`` is on line else returns ``False``
+        """
         return (not self.inv(point) is None)
 
     def inv(self, point):
+        """Returns the value :math:`L^{-1}(\\overline{p})` where 
+        :math:`\\overline{p}` is the point ``point``.
+
+        Parameters
+        ----------
+        point : np.ndarray 
+            The point :math:`\\overline{p}`.
+
+        Returns
+        -------
+        float, int
+            The evaluated value :math:`L^{-1}(\\overline{p})`.
+        """
         out = None
+        point = col_vector(point)
         P = row_vector(point - self.A)
         V = row_vector(self.v)
         for i in range(0, len(V)):
@@ -237,6 +404,18 @@ class Line(GObject):
         return out
 
     def fx(self, x):
+        """Returns the :math:`y` value at :math:`x`.
+
+        Parameters
+        ----------
+        x : float, int
+            :math:`x`
+
+        Returns
+        -------
+        float, int, None
+            :math:`y`
+        """
         vx, vy = row_vector(self.v)
         Ax, Ay = row_vector(self.A)
 
@@ -250,6 +429,18 @@ class Line(GObject):
         return y
 
     def fy(self, y):
+        """Returns the :math:`x` value at :math:`y`.
+
+        Parameters
+        ----------
+        y : float, int
+            :math:`y`
+
+        Returns
+        -------
+        float, int, None
+            :math:`x`
+        """
         vx, vy = row_vector(self.v)
         Ax, Ay = row_vector(self.A)
 
@@ -263,6 +454,7 @@ class Line(GObject):
         return x
 
     def __eq__(self, line):
+        """Checks if ``self`` and ``line`` are equal."""
         out = False
         if self | line:
             A, B = self.A, self.B
@@ -310,6 +502,21 @@ class Line(GObject):
         return out
 
     def rotate(self, point, angle):
+        """Rotates the line around ``point`` by an angle of ``angle``.
+
+        Parameters
+        ----------
+        point : np.ndarray
+            The center of rotation
+        angle : float, int
+            The angle of rotation
+
+        Returns
+        -------
+        Line
+            Returns the rotated line.
+        """
+        point = col_vector(point)
         A_,B_=rotate(self.A, point, angle),rotate(self.B, point, angle)
         return Line(A_, B_)
 
@@ -325,13 +532,51 @@ class Line(GObject):
         return out
 
     def parallel_line(self,P):
+        """Returns the parallel line through point ``P``.
+
+        Parameters
+        ----------
+        P : np.ndarray
+            The point through which the parallel line will go.
+
+        Returns
+        -------
+        Line
+            Returns the parallel line through point ``P``.
+        """
+        P = col_vector(P)
         return Line(P, self.v+P)
 
     def perpendicular_line(self,P):
+        """Returns the perpendicular line through point ``P``.
+
+        Parameters
+        ----------
+        P : np.ndarray
+            The point through which the perpendicular line will go.
+
+        Returns
+        -------
+        Line
+            The perpendicular line through point ``P``.
+        """
+        P = col_vector(P)
         return Line(P, rotate(self.v,origin,90)+P)
 
     def __or__(self,line):
-        """ Checks if `self` and `line` are parallel """
+        """Checks if ``self`` and `line`` are parallel.
+
+        Parameters
+        ----------
+        line : Line
+            The other line
+
+        Returns
+        -------
+        bool
+            Returns ``True`` if ``self`` and ``line`` are parallel line. 
+            Otherwise returns ``False``.
+        """
         v1x,v1y=self.v[0,0],self.v[1,0]
         v2x,v2y=line.v[0,0],line.v[1,0]
         V=np.array([[v1x,-1*v2x],
@@ -340,30 +585,99 @@ class Line(GObject):
         return isclose(det(V),0.0)
 
     def __and__(self,obj):
-        """Returns the intersection point of `self` and `obj`"""
+        """Returns the intersection point of ``self`` and ``obj``
+
+        Parameters
+        ----------
+        obj : GObject
+            The other geometric object.
+
+        """
         return self.intersection(obj)
 
     def __xor__(self,line):
-        """ Checks if `self` and `line` are perpendicular """
+        """Checks if ``self`` and ``line`` are perpendicular.
+
+        Parameters
+        ----------
+        line : Line
+            The other line.
+
+        Returns
+        -------
+        bool
+            Returns ``True`` if ``self`` and ``line`` are perpendicular lines. 
+            Otherwise returns ``False``.
+        """
         v1=row_vector(self.v)
         v2=row_vector(line.v)
         return isclose(np.dot(v1,v2),0)
 
     def isperp(self,line):
+        """Checks if ``self`` and ``line`` are perpendicular.
+
+        Parameters
+        ----------
+        line : Line
+            The other line.
+
+        Returns
+        -------
+        bool
+            Returns ``True`` if ``self`` and ``line`` are perpendicular lines. 
+            Otherwise returns ``False``.
+        """
         return self ^ line
 
     def isparallel(self,line):
+        """Checks if ``self`` and `line`` are parallel.
+
+        Parameters
+        ----------
+        line : Line
+            The other line.
+
+        Returns
+        -------
+        bool
+            Returns ``True`` if ``self`` and ``line`` are parallel line. 
+            Otherwise returns ``False``.
+        """
         return self | line
 
     def angle(self,line):
+        """Returns the angle between ``self`` and ``line``.
+
+        Parameters
+        ----------
+        line : Line
+            The other line.
+
+        Returns
+        -------
+        float, int
+            The value of the angle.
+        """
         v1=self.v
         v2=line.v
         theta=angle_between_vectors(v1, v2)%180
         return theta
 
     def distance(self, obj):
+        """Returns the perpendicular distance between ``self`` and ``obj``.
+
+        Parameters
+        ----------
+        obj : np.ndarray, Line
+            Point or a line
+
+        Returns
+        -------
+        float, int, None
+            The perpendicular distance between ``self`` and ``obj``
+        """
         out=None
-        if isinstance(obj, np.ndarray):
+        if isinstance(obj, (np.ndarray, tuple, list)):
             perp_line=self.perpendicular_line(obj)
             A=self.intersection(perp_line)
             out=dist(A, obj)
@@ -876,7 +1190,7 @@ def convex_hull(*points) -> list:
     Returns
     -------
     list
-        The list of all of points on the convex hull.
+        The list of all the points on the convex hull.
 
     Examples
     --------
