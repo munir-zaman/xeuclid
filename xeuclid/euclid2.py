@@ -11,8 +11,8 @@ class GObject(object):
 origin=np.array([[0],[0]])
 
 def rotation_matrix(theta):
-    """Returns the matrix, 
-    
+    """Returns the matrix,
+
     .. math::
         \\begin{bmatrix}
             \\cos(\\theta) & -\\sin(\\theta) \\\\
@@ -250,7 +250,7 @@ class Line(GObject):
 
     .. math::
         L(t) = (1-t)\\overline{A} + t\\overline{B}
-    
+
     where :math:`A` and :math:`B` are two points that are on the line :math:`L(t)`.
 
     Attributes
@@ -369,7 +369,7 @@ class Line(GObject):
 
         Parameters
         ----------
-        point : np.ndarray 
+        point : np.ndarray
             The point
 
         Returns
@@ -385,7 +385,7 @@ class Line(GObject):
 
         Parameters
         ----------
-        point : np.ndarray 
+        point : np.ndarray
             The point :math:`\\overline{p}`.
 
         Returns
@@ -690,12 +690,28 @@ class Line(GObject):
         return out
 
 
-def param_to_impl_line(line, show=True):
+def param_to_impl_line(line : Line) -> tuple:
+    """Returns the tuple :math:(A, B, C)`` where :math:`A, B, C` 
+    are constants such that all the points :math:`(x,y)` that satisfy 
+    the equation,
+
+    .. math::
+        Ax + By + C = 0
+    are on the line ``line``.
+
+    Parameters
+    ----------
+    line : Line
+        The line whose implicit form you want to find
+
+    Returns
+    -------
+    tuple
+        The tuple :math:`(A, B, C)`.
+    """
     Ax,Ay=row_vector(line.A)
     vx,vy=row_vector(line.v)
-    if show:
-        print(f"{-1*vy}*x+ {vx}*y+ {vy*Ax-vx*Ay}= 0")
-    return np.array([-1*vy, vx, vy*Ax-vx*Ay])
+    return (-1*vy, vx, vy*Ax-vx*Ay)
 
 def impl_to_param_line(coeff):
     a, b, c = coeff
@@ -721,16 +737,21 @@ y_axis=Line(zero_vect,y_vect)
 x_axis=Line(zero_vect,x_vect)
 
 def collinear(*points: np.ndarray):
-    """ collinear(*points)
+    """Returns the line through the points ``points`` if all the points 
+    in ``points`` are collinear. Otherwise returns ``None``.
 
-        checks if the given set of points are collinear
-        If,the given set of points are collinear:
-            returns the line through the given set of points.
-        Else,
-            returns None
+    Parameters
+    ----------
+    points : np.ndarray
+        The points
+
+    Returns
+    -------
+    Line, None
+        Returns a ``Line`` if the points are collinear. Otherwise returns ``None``.
     """
-    A,B=points[0],points[1]
-    AB=points_to_line(A,B)
+    A, B = points[0],points[1]
+    AB = Line(A, B)
     out=True
 
     for p in points:
@@ -739,10 +760,8 @@ def collinear(*points: np.ndarray):
             break
 
     if out:
-        print(True)
         line=AB
     else:
-        print(False)
         line=None
 
     return line
@@ -785,7 +804,7 @@ class Segment(GObject):
         self._v = self.B - self.A
         self._line = Line(self.A, self.B)
         self._mid = mid(self.A, self.B)
-        self._length = dist(self.A, self.B)        
+        self._length = dist(self.A, self.B)
 
     @property
     def type(self):
@@ -814,7 +833,7 @@ class Segment(GObject):
     @property
     def B(self):
         return self._B
-    
+
     @A.setter
     def A(self, value):
         value = col_vector(value)
@@ -842,6 +861,9 @@ class Segment(GObject):
     def __contains__(self, point):
         return (not self.inv(point) is None)
 
+    def __len__(self):
+        return self.length
+
     def inv(self,P):
         out_=self.line.inv(P)
         if out_!=None:
@@ -854,9 +876,17 @@ class Segment(GObject):
     def __eq__(self, segment):
         out = False
         if self.line == segment.line:
-            A1, B1 = tuple(rnd(row_vector(self.A))), tuple(rnd(row_vector(self.B)))
-            A2, B2 = tuple(rnd(row_vector(segment.A))), tuple(rnd(row_vector(segment.B)))
-            out = {A1, B1} == {A2, B2}
+            mid1 = (self.A + self.B)/2
+            mid2 = (segment.A + segment.B)/2
+            same_mid = np.allclose(mid1, mid2, rtol=0, atol=1e-8)
+            # check if they have the same midpoint
+            common_end = ( np.allclose(self.A, segment.A, rtol=0, atol=1e-8)
+                        or np.allclose(self.A, segment.B, rtol=0, atol=1e-8) )
+            # check if they share at least one common endpoint 
+            out = same_mid and common_end
+            # two segments will be the same
+            # if and only if they have the same midpoint and 
+            # share at least one common endpoint.
         return out
 
     def __add__(self,vector):
@@ -918,11 +948,11 @@ class Ray(GObject):
     @property
     def line(self):
         return self._line
-    
+
     @property
     def v(self):
         return self._v
-    
+
     @property
     def type(self):
         return 'ray'
@@ -974,7 +1004,7 @@ class Ray(GObject):
     def __eq__(self, ray):
         out = False
         if self.line == self.ray:
-            out = np.isclose(self.A, ray.A, rtol=0)
+            out = np.allclose(self.A, ray.A, rtol=0, atol=1e-8)
         return out
 
     def __add__(self,vector):
@@ -1113,7 +1143,7 @@ class Polygon(GObject):
         ----------
         point : np.ndarray, list or tuple
 
-        
+
         Returns
         -------
         bool
@@ -1180,7 +1210,7 @@ class Polygon(GObject):
 
 
 def convex_hull(*points) -> list:
-    """Returns the convex hull of ``points``. 
+    """Returns the convex hull of ``points``.
 
     Parameters
     ----------
