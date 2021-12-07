@@ -1,6 +1,5 @@
 import os
 import sys
-from xeuclid import __version__
 
 sys.path.insert(0, os.path.abspath('../../'))
 
@@ -9,6 +8,8 @@ sys.path.insert(0, os.path.abspath('../../'))
 project = 'Xeuclid'
 copyright = '2021, Munir Uz Zaman'
 author = 'Munir Uz Zaman'
+
+from xeuclid import __version__
 
 # The full version, including alpha/beta/rc tags
 version = __version__
