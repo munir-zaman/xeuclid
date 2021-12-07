@@ -678,14 +678,22 @@ class Line(GObject):
         """
         out=None
         if isinstance(obj, (np.ndarray, tuple, list)):
-            perp_line=self.perpendicular_line(obj)
-            A=self.intersection(perp_line)
-            out=dist(A, obj)
+            obj = col_vector(obj)
+            ax, ay = row_vector(self.A)
+            vx, vy = row_vector(self.v)
+            px, py = row_vector(obj)
+
+            T = -(vx*(ax-px) + vy*(ay-py))/(vx**2 + vy**2)
+            out = self(T)
 
         elif isinstance(obj, Line) and (obj | self):
-            perp_line = self.perpendicular_line(obj.A)
-            A=self.intersection(perp_line)
-            out=dist(A, obj.A)
+            P = obj.A
+            ax, ay = row_vector(self.A)
+            vx, vy = row_vector(self.v)
+            px, py = row_vector(P)
+
+            T = -(vx*(ax-px) + vy*(ay-py))/(vx**2 + vy**2)
+            out = self(T)
 
         return out
 
