@@ -684,7 +684,7 @@ class Line(GObject):
             px, py = row_vector(obj)
 
             T = -(vx*(ax-px) + vy*(ay-py))/(vx**2 + vy**2)
-            out = self(T)
+            out = np.sqrt((ax + vx*T - px)**2 + (ay + vy*T - py)**2)
 
         elif isinstance(obj, Line) and (obj | self):
             P = obj.A
@@ -693,7 +693,7 @@ class Line(GObject):
             px, py = row_vector(P)
 
             T = -(vx*(ax-px) + vy*(ay-py))/(vx**2 + vy**2)
-            out = self(T)
+            out = np.sqrt((ax + vx*T - px)**2 + (ay + vy*T - py)**2)
 
         return out
 
