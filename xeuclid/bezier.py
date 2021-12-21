@@ -16,7 +16,7 @@ def bernstein_poly_func(degree, index, interval=(0, 1)):
     func = lambda t: comb(n, i)*((t1-t)**(n-i))*((t-t0)**i)*(1/dt**n)
     return func
 
-def increment_degree(curve: BezierCurve) -> BezierCurve:
+def increment_degree(curve: BezierCurve):
     """ increments the degree of the given bezier curve `curve` by one and
         returns the control points of the new bezier curve.
     """
@@ -31,7 +31,7 @@ def increment_degree(curve: BezierCurve) -> BezierCurve:
 
     return new_controls
 
-def elevate_degree(curve, n=1) -> BezierCurve:
+def elevate_degree(curve, n=1):
     new_curve = curve
     new_controls = curve.controls[::]
     for i in range(0, n):

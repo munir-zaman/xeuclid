@@ -18,6 +18,27 @@ STANDALONE_TEMPLATE = \
 DEFAULT_PACKAGES = []
 DEFAULT_TIKZLIBS = ['arrows.meta']
 
+LINE_WIDTH_DICT = {
+    "ultra thin": 0.1, 
+    "very thin": 0.2, 
+    "thin": 0.4 ,
+    "semithick": 0.6, 
+    "thick": 0.8 ,
+    "very thick": 1.2,
+    "ultra thick": 1.6
+}
+
+POINT = {
+    'draw' : 'Black',
+    'fill' : 'DeepSkyBlue',
+    'line_width' : 'thin'
+}
+
+PATH = {
+    'line_width' : 'thick',
+    'line_cap' : 'round'
+}
+
 
 def parse_coordinate(coord):
     if isinstance(coord, (tuple, list, np.ndarray)):
@@ -34,6 +55,24 @@ def parse_coordinate(coord):
     return parsed_coord
 
 def parse_kwargs(kwargs):
+
+    # handle line_width values
+
+    if 'line_width' in kwargs.keys():
+        line_width = kwargs['line_width']
+        line_width_key = 'line_width'
+    elif 'line width' in kwargs.keys():
+        line_width = kwargs['line width']
+        line_width_key = 'line width'
+    else:
+        line_width = None
+
+    if line_width != None:
+        if line_width.strip() in LINE_WIDTH_DICT.keys():
+            line_width = LINE_WIDTH_DICT[line_width]
+            kwargs[line_width_key] = line_width
+
+
     args_list = [(args.replace("_", " ").strip(), kwargs[args]) for args in kwargs.keys() if args.strip()!='config']
 
     if 'config' in kwargs.keys():
@@ -157,6 +196,41 @@ class Tikz:
 
     def end(self, env):
         self.write(f"\\end{{{env}}}")
+
+    def pdf(self, shell_escape=False, batchmode=True):
+        """Generates ``pdf`` file using ``pdflatex``. """
+        shell_escape_string = " -shell-escape"
+        batchmode_string = " -interaction=batchmode"
+        cmd = "pdflatex"
+
+        if shell_escape:
+            cmd += shell_escape_string
+        if batchmode:
+            cmd += batchmode_string
+
+        cmd += " " + self.fp
+        os.system(cmd)
+
+    def draw_point(self, point, radius=2, **kwargs):
+        kwargs = POINT | kwargs # use default values if not provided
+        parsed_config = parse_kwargs(kwargs)
+        config_str = f"[{parsed_config}]"
+        point_coord =parse_coordinate(point)
+        code = f"\\filldraw{config_str} {point_coord} circle ({radius}pt);"
+        self.write(code)
+
+    def draw_path(self, *points, **kwargs):
+        coords = [parse_coordinate(point) for point in points]
+        path_str = coords[0]
+        for coord in coords[1:]:
+            path_str += " -- " + coord
+
+        kwargs = PATH | kwargs
+        parsed_config = parse_kwargs(kwargs)
+        config_str = f"[{parsed_config}]"
+
+        code = f"\\draw{config_str} " + path_str + ";"
+        self.write(code)
 
     def add(self, obj):
         if isinstance(obj, Node):
