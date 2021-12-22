@@ -219,11 +219,13 @@ class Tikz:
         code = f"\\filldraw{config_str} {point_coord} circle ({radius}pt);"
         self.write(code)
 
-    def draw_path(self, *points, **kwargs):
+    def draw_path(self, *points, cycle=False, **kwargs):
         coords = [parse_coordinate(point) for point in points]
         path_str = coords[0]
         for coord in coords[1:]:
             path_str += " -- " + coord
+        if cycle:
+            path_str += " -- cycle"
 
         kwargs = PATH | kwargs
         parsed_config = parse_kwargs(kwargs)
