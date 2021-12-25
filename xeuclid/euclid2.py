@@ -1,4 +1,6 @@
 from xeuclid.utils.math import *
+import math
+
 
 to_tuple = lambda vector: tuple(row_vector(vector))
 
@@ -126,8 +128,8 @@ def angle(A,B,C) -> float:
     C1,C2=c1-b1,c2-b2
     #translate [x,y] -> [x-b1,y-b2]
 
-    t1=atan2(A1,A2)
-    t2=atan2(C1,C2)
+    t1 = math.degrees(math.atan2(A2, A1))
+    t2 = math.degrees(math.atan2(C2, C1))
 
     return round((t2-t1)%360, 12)
 
@@ -161,8 +163,9 @@ def angle_bisector(A,B,C):
     C1,C2=c1-b1,c2-b2
     #translate [x,y] -> [x-b1,y-b2]
 
-    t1=atan2(A1,A2)
-    t2=atan2(C1,C2)
+    t1 = math.degrees(math.atan2(A2, A1))
+    t2 = math.degrees(math.atan2(C2, C1))
+
     T=(((t2-t1)%360)/2)+t1
     R=np.array([[cos(T)],
                 [sin(T)]])
@@ -397,9 +400,12 @@ class Line(GObject):
         point = col_vector(point)
         P = row_vector(point - self.A)
         V = row_vector(self.v)
+
         for i in range(0, len(V)):
             if not isclose(V[i], 0):
                 t = P[i]/V[i]
+                break
+
         out = t if np.allclose(P, V*t, rtol=0) else None
         return out
 
@@ -676,24 +682,25 @@ class Line(GObject):
         float, int, None
             The perpendicular distance between ``self`` and ``obj``
         """
+
+        # GENERALIZE?
         out=None
         if isinstance(obj, (np.ndarray, tuple, list)):
             obj = col_vector(obj)
-            ax, ay = row_vector(self.A)
-            vx, vy = row_vector(self.v)
-            px, py = row_vector(obj)
+            A = row_vector(self.A)
+            V = row_vector(self.v)
+            Q = row_vector(obj)
 
-            T = -(vx*(ax-px) + vy*(ay-py))/(vx**2 + vy**2)
-            out = np.sqrt((ax + vx*T - px)**2 + (ay + vy*T - py)**2)
+            a = V**2
+            b = 2*V*(A - Q)
+            c = (A - Q)**2
+
+            T = -b/(2*a)
+            out = dist(obj, self(T))
 
         elif isinstance(obj, Line) and (obj | self):
             P = obj.A
-            ax, ay = row_vector(self.A)
-            vx, vy = row_vector(self.v)
-            px, py = row_vector(P)
-
-            T = -(vx*(ax-px) + vy*(ay-py))/(vx**2 + vy**2)
-            out = np.sqrt((ax + vx*T - px)**2 + (ay + vy*T - py)**2)
+            out = self.distance(P)
 
         return out
 
@@ -1334,7 +1341,8 @@ class Circle(GObject):
         out=None
         if point in self:
             Px, Py = row_vector(point - self.center)
-            out=atan2(Px, Py)
+            out = math.degrees(math.atan2(Py, Px))
+            #out=atan2(Px, Py)
         return out
 
     def power(self, point):

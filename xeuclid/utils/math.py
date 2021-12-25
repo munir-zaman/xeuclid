@@ -1,33 +1,32 @@
-import math as mth
+import math
 import numpy as np
 import scipy.interpolate
 
 
-def isnone(obj):
-    return str(type(obj))=="<class 'NoneType'>"
-
 round_val=8
-abs_tol=10**-7
-
-isclose=lambda a,b: mth.isclose(a,b,abs_tol=abs_tol,rel_tol=0)
 rnd=lambda x: round(x,round_val) if not isnone(x) else None
 rndv=np.vectorize(rnd)
 
-sqrt=lambda n: mth.sqrt(n)
+# some math functions
 
-sin=lambda a: round(mth.sin(mth.radians(a)), 16)
+abs_tol=10**-7
+isclose=lambda a,b: math.isclose(a,b,abs_tol=abs_tol,rel_tol=0)
 
-asin=lambda a: mth.degrees(mth.asin(a))%180
+sqrt=lambda n: math.sqrt(n)
 
-cos=lambda a: round(mth.cos(mth.radians(a)), 16)
+sin=lambda a: round(math.sin(math.radians(a)), 16)
+cos=lambda a: round(math.cos(math.radians(a)), 16)
+tan=lambda a: round(math.tan(math.radians(a)), 16)
 
-acos=lambda a: mth.degrees(mth.acos(a))%180
+asin=lambda a: math.degrees(math.asin(a))%180
+acos=lambda a: math.degrees(math.acos(a))%180
+atan=lambda a: math.degrees(math.atan(a))%180
 
-tan=lambda a: round(mth.tan(mth.radians(a)), 16)
+atan2=lambda x,y: math.degrees(math.atan2(y,x))
 
-atan=lambda a: mth.degrees(mth.atan(a))%180
 
-atan2=lambda x,y: mth.degrees(mth.atan2(y,x))
+def isnone(obj):
+    return True if obj is None else False
 
 def get_rid_of_multiple_points(l):
     L=l.copy()
@@ -100,7 +99,7 @@ def system(A,B):
     if np.linalg.det(A)!=0:
         out=np.linalg.solve(A, B)
     else:
-        #print("solution does not exist in R")
+        #solution does not exist
         out=None
     return out
 
@@ -115,11 +114,10 @@ vectorize=lambda func: np.vectorize(func)
 
 strv=np.vectorize(str)
 
-def norm(vector):
-    vx,vy=row_vector(vector)
-    r=mth.sqrt(vx**2+ vy**2)
-    Vx,Vy=vx/r, vy/r
-    V=col_vector([Vx, Vy])
+def norm(vector: np.ndarray):
+    v = row_vector(vector)
+    r = math.sqrt(sum(v**2))
+    norm_v = col_vector(v/r)
     return V
 
 def dist(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
@@ -127,7 +125,7 @@ def dist(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     if p1.shape != p2.shape:
         raise ValueError("`p1` and `p2` must have the same shape")
 
-    return round(mth.sqrt(sum((p1 - p2)**2)), 16)
+    return round(math.sqrt(sum((p1 - p2)**2)), 16)
 
 def mid(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     """ Returns the midpoint of points `p1` and `p2` """
@@ -149,7 +147,7 @@ def choose(n: int, k: int, save=True) -> int:
         X = 1
         for i in range(0, k):
             X*=(n-i)
-        out = X/mth.factorial(k)
+        out = X/math.factorial(k)
 
         if save:
             _CHOOSE_CACHE.update({(n,k): out})
