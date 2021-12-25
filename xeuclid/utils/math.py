@@ -118,7 +118,7 @@ def norm(vector: np.ndarray):
     v = row_vector(vector)
     r = math.sqrt(sum(v**2))
     norm_v = col_vector(v/r)
-    return V
+    return norm_v
 
 def dist(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     """ Returns the distance between points `p1` and `p2` """

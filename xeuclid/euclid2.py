@@ -691,9 +691,9 @@ class Line(GObject):
             V = row_vector(self.v)
             Q = row_vector(obj)
 
-            a = V**2
-            b = 2*V*(A - Q)
-            c = (A - Q)**2
+            a = sum(V**2)
+            b = sum(2*V*(A - Q))
+            c = sum((A - Q)**2)
 
             T = -b/(2*a)
             out = dist(obj, self(T))
