@@ -19,10 +19,10 @@ DEFAULT_PACKAGES = []
 DEFAULT_TIKZLIBS = ['arrows.meta']
 
 LINE_WIDTH_DICT = {
-    "ultra thin": 0.1, 
-    "very thin": 0.2, 
+    "ultra thin": 0.1,
+    "very thin": 0.2,
     "thin": 0.4 ,
-    "semithick": 0.6, 
+    "semithick": 0.6,
     "thick": 0.8 ,
     "very thick": 1.2,
     "ultra thick": 1.6
@@ -39,12 +39,24 @@ PATH = {
     'line_cap' : 'round'
 }
 
+ARC = {
+    'line_width' : 'thick',
+    'line_cap' : 'round'
+}
+
+CIRCLE = {
+    'line_width' : 'thick'
+}
 
 def parse_coordinate(coord):
     if isinstance(coord, (tuple, list, np.ndarray)):
-        x, y = row_vector(coord)
-        x, y = round(x, 8), round(y, 8)
-        parsed_coord = f"({x}, {y})"
+        coord = col_vector(coord)
+        round_vec = np.vectorize(round)
+        str_vec = np.vectorize(str)
+        coord = str_vec(round_vec(coord))
+        coord = list(row_vector(coord))
+        parsed_coord_ = ",".join(coord)
+        parsed_coord = f"({parsed_coord_})"
 
     elif isinstance(coord, str):
         parsed_coord = coord.strip()
@@ -54,7 +66,7 @@ def parse_coordinate(coord):
 
     return parsed_coord
 
-def parse_kwargs(kwargs):
+def parse_kwargs(kwargs, add_to_config : list=[]):
 
     # handle line_width values
 
@@ -75,15 +87,18 @@ def parse_kwargs(kwargs):
 
     args_list = [(args.replace("_", " ").strip(), kwargs[args]) for args in kwargs.keys() if args.strip()!='config']
 
+    passed_config = ""
     if 'config' in kwargs.keys():
         passed_config = kwargs['config']
-    else:
-        passed_config = None
 
     if len(kwargs.keys()) != 0:
         config_list = [f"{args_list[i][0]}={args_list[i][1]}" for i in range(0, len(args_list))]
-        if passed_config != None:
-            config_list.append(passed_config)
+        config_list.append(passed_config)
+
+        if isinstance(add_to_config, list):
+            config_list += add_to_config
+        elif isinstance(add_to_config, str):
+            config_list.append(add_to_config)
 
         config_str = ",".join(config_list)
     else:
@@ -185,17 +200,25 @@ class Tikz:
 
         self.write("") # empty line
 
-    def begin(self, env, **kwargs):
-        config_str = parse_kwargs(kwargs)
-        if config_str.strip()!="":
-            config = f"[{config_str}]"
+    def begin(self, *envs, **kwargs):
+        if len(envs) > 0:
+            for env in envs:
+                config_str = parse_kwargs(kwargs)
+                if config_str.strip()!="":
+                    config = f"[{config_str}]"
+                else:
+                    config = ""
+
+                self.write(f"\\begin{{{env}}}{config}")
         else:
-            config = ""
+            self.begin('document', 'tikzpicture')
 
-        self.write(f"\\begin{{{env}}}{config}")
-
-    def end(self, env):
-        self.write(f"\\end{{{env}}}")
+    def end(self, *envs):
+        if len(envs) > 0:
+            for env in envs:
+                self.write(f"\\end{{{env}}}")
+        else:
+            self.end('tikzpicture', 'document')
 
     def pdf(self, shell_escape=False, batchmode=True):
         """Generates ``pdf`` file using ``pdflatex``. """
@@ -219,7 +242,11 @@ class Tikz:
         code = f"\\filldraw{config_str} {point_coord} circle ({radius}pt);"
         self.write(code)
 
-    def draw_path(self, *points, cycle=False, **kwargs):
+    def  draw_points(self, *points, **kwargs):
+        for point in points:
+            self.draw_point(point, **kwargs)
+
+    def draw_path(self, *points, cycle=False, arrows="", **kwargs):
         coords = [parse_coordinate(point) for point in points]
         path_str = coords[0]
         for coord in coords[1:]:
@@ -228,13 +255,53 @@ class Tikz:
             path_str += " -- cycle"
 
         kwargs = PATH | kwargs
-        parsed_config = parse_kwargs(kwargs)
+        parsed_config = parse_kwargs(kwargs, add_to_config=[arrows])
         config_str = f"[{parsed_config}]"
 
         code = f"\\draw{config_str} " + path_str + ";"
         self.write(code)
 
-    def add(self, obj):
+    def draw_circle(self, circle, **kwargs):
+        center = circle.center
+        radius = circle.radius
+        center = parse_coordinate(center)
+
+        kwargs = CIRCLE | kwargs
+        parsed_config = parse_kwargs(kwargs)
+        config_str = f"[{parsed_config}]"
+        code = f"\\draw{config_str} {center} circle ({radius});"
+        self.write(code)
+
+    def draw_arc(self, pos, start_angle=None, end_angle=None, delta_angle=None, radius=None, arrows="", **kwargs):
+
+        if (start_angle is not None) and (end_angle is not None):
+            start_angle, end_angle = start_angle, end_angle
+        # if end_angle is not given set end_angle = start_angle + delta_angle
+        elif (start_angle is not None) and (end_angle is None) and (delta_angle is not None):
+            end_angle = start_angle + delta_angle
+        # if start_angle is not given set start_angle = end_angle - delta_angle
+        elif (start_angle is None) and (end_angle is not None) and (delta_angle is not None):
+            start_angle = end_angle - delta_angle
+        else:
+            ValueError("Could not compute start_angle and end_angle")
+
+        if radius is None:
+            radius = round(dist(col_vector([0, 0]), col_vector(pos)), 8)
+
+        angle_str = f"[start angle={start_angle}, end angle={end_angle}]"
+        pos_str = parse_coordinate(pos)
+
+        kwargs = ARC | kwargs
+        parsed_config = parse_kwargs(kwargs, add_to_config=[arrows])
+        config_str = f"[radius={radius},{parsed_config}]"
+
+        code = f"\\draw{config_str} {pos_str} arc {angle_str};"
+        self.write(code)
+
+    def add(self, obj, **kwargs):
         if isinstance(obj, Node):
             self.write(obj.get_code())
+
+        elif isinstance(obj, Circle):
+            self.draw_circle(obj, **kwargs)
 

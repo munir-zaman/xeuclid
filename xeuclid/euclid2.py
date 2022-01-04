@@ -1319,7 +1319,7 @@ def intersection_circle_circle(circle1, circle2):
 class Circle(GObject):
 
     def __init__(self, center, radius):
-        self.center=center
+        self.center=col_vector(center)
         self.radius=radius
 
     @property
@@ -1333,11 +1333,13 @@ class Circle(GObject):
         return self.center+ self.radius* np.array([[cos(theta)], [sin(theta)]])
 
     def __contains__(self, point):
+        point = col_vector(point)
         Px, Py=row_vector(point - self.center)
         r=self.radius
         return isclose( (Px)**2 + (Py)**2 , r**2 )
 
     def inv(self, point):
+        point = col_vector(point)
         out=None
         if point in self:
             Px, Py = row_vector(point - self.center)
@@ -1346,9 +1348,11 @@ class Circle(GObject):
         return out
 
     def power(self, point):
+        point = col_vector(point)
         return dist(point, self.center)**2 - self.radius**2
 
     def tangent(self, point):
+        point = col_vector(point)
         out=[]
         if point in self:
             line=Line(point, self.center)
@@ -1381,6 +1385,7 @@ class Circle(GObject):
         return self.intersection(obj)
 
     def rotate(self, point, angle):
+        point = col_vector(point)
         return Circle(rotate(self.center, point, angle), self.radius)
 
 
