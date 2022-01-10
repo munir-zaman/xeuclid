@@ -34,10 +34,16 @@ POINT = {
     'line_width' : 'thin'
 }
 
+POINT_VALID_KWARGS = ['draw', 'fill', 'line_width', 'color']
+POINT_NON_KEYVALS = ['color']
+
 PATH = {
     'line_width' : 'thick',
     'line_cap' : 'round'
 }
+
+PATH_VALID_KWARGS = ['draw', 'line_width', 'line_cap', 'color', 'arrows']
+PATH_NON_KEYVALS = ['color', 'arrows']
 
 ARC = {
     'line_width' : 'thick',
@@ -294,10 +300,10 @@ class Tikz:
 
     def draw_point(self, point, radius=2, **kwargs):
         kwargs = POINT | kwargs # use default values if not provided
-        parsed_config = parse_kwargs(kwargs)
-        config_str = f"[{parsed_config}]"
-        point_coord =parse_coordinate(point)
-        code = f"\\filldraw{config_str} {point_coord} circle ({radius}pt);"
+        config_str = get_config_str(kwargs, non_keyvals=POINT_NON_KEYVALS, valid_kwargs=POINT_VALID_KWARGS)
+        point_coord = parse_coordinate(point)
+
+        code = f"\\filldraw[{config_str}] {point_coord} circle ({radius}pt);"
         self.write(code)
 
     def  draw_points(self, *points, **kwargs):
@@ -313,10 +319,9 @@ class Tikz:
             path_str += " -- cycle"
 
         kwargs = PATH | kwargs
-        parsed_config = parse_kwargs(kwargs, add_to_config=[arrows])
-        config_str = f"[{parsed_config}]"
+        config_str = get_config_str(kwargs, non_keyvals=PATH_NON_KEYVALS, valid_kwargs=PATH_VALID_KWARGS)
 
-        code = f"\\draw{config_str} " + path_str + ";"
+        code = f"\\draw[{config_str}] " + path_str + ";"
         self.write(code)
 
     def draw_circle(self, circle, **kwargs):
