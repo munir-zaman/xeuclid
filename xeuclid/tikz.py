@@ -16,7 +16,7 @@ STANDALONE_TEMPLATE = \
 \\usepackage{amssymb}"""
 
 DEFAULT_PACKAGES = []
-DEFAULT_TIKZLIBS = ['arrows.meta']
+DEFAULT_TIKZLIBS = ['arrows.meta', 'calc']
 
 LINE_WIDTH_DICT = {
     "ultra thin": 0.1,
@@ -34,25 +34,31 @@ POINT = {
     'line_width' : 'thin'
 }
 
-POINT_VALID_KWARGS = ['draw', 'fill', 'line_width', 'color']
-POINT_NON_KEYVALS = ['color']
+POINT_VALID_KWARGS = ['draw', 'fill', 'opacity', 'line_width']
+POINT_NON_KEYVALS = []
 
 PATH = {
     'line_width' : 'thick',
     'line_cap' : 'round'
 }
 
-PATH_VALID_KWARGS = ['draw', 'line_width', 'line_cap', 'color', 'arrows']
-PATH_NON_KEYVALS = ['color', 'arrows']
+PATH_VALID_KWARGS = ['draw', 'line_width', 'opacity', 'line_cap', 'arrows']
+PATH_NON_KEYVALS = ['arrows']
 
 ARC = {
     'line_width' : 'thick',
     'line_cap' : 'round'
 }
 
+ARC_VALID_KWARGS = ['draw', 'opacity', 'line_width', 'line_cap', 'arrows']
+ARC_NON_KEYVALS = ['arrows']
+
 CIRCLE = {
     'line_width' : 'thick'
 }
+
+CIRCLE_VALID_KWARGS = ['draw', 'fill', 'opacity', 'line_width']
+CIRCLE_NON_KEYVALS = []
 
 round_vec = np.vectorize(lambda x: round(x, 8))
 str_vec = np.vectorize(str)
@@ -310,7 +316,7 @@ class Tikz:
         for point in points:
             self.draw_point(point, **kwargs)
 
-    def draw_path(self, *points, cycle=False, arrows="", **kwargs):
+    def draw_path(self, *points, cycle=False, **kwargs):
         coords = [parse_coordinate(point) for point in points]
         path_str = coords[0]
         for coord in coords[1:]:
@@ -330,12 +336,20 @@ class Tikz:
         center = parse_coordinate(center)
 
         kwargs = CIRCLE | kwargs
-        parsed_config = parse_kwargs(kwargs)
-        config_str = f"[{parsed_config}]"
-        code = f"\\draw{config_str} {center} circle ({radius});"
+        config_str = get_config_str(kwargs, non_keyvals=CIRCLE_NON_KEYVALS, valid_kwargs=CIRCLE_VALID_KWARGS)
+
+        code = f"\\draw[{config_str}] {center} circle ({radius});"
         self.write(code)
 
-    def draw_arc(self, pos, start_angle=None, end_angle=None, delta_angle=None, radius=None, arrows="", **kwargs):
+    def draw_arc(
+        self,
+        pos,
+        start_angle=None,
+        end_angle=None,
+        delta_angle=None,
+        radius=None,
+        **kwargs
+    ):
 
         if (start_angle is not None) and (end_angle is not None):
             start_angle, end_angle = start_angle, end_angle
@@ -351,14 +365,13 @@ class Tikz:
         if radius is None:
             radius = round(dist(col_vector([0, 0]), col_vector(pos)), 8)
 
-        angle_str = f"[start angle={start_angle}, end angle={end_angle}]"
+        angle_str = f"start angle={start_angle}, end angle={end_angle}"
         pos_str = parse_coordinate(pos)
 
         kwargs = ARC | kwargs
-        parsed_config = parse_kwargs(kwargs, add_to_config=[arrows])
-        config_str = f"[radius={radius},{parsed_config}]"
+        config_str = get_config_str(kwargs, non_keyvals=ARC_NON_KEYVALS, valid_kwargs=ARC_VALID_KWARGS)
 
-        code = f"\\draw{config_str} {pos_str} arc {angle_str};"
+        code = f"\\draw[radius={radius},{config_str}] {pos_str} arc [{angle_str}];"
         self.write(code)
 
     def add(self, obj, **kwargs):
