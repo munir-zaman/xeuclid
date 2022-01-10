@@ -48,13 +48,15 @@ CIRCLE = {
     'line_width' : 'thick'
 }
 
+round_vec = np.vectorize(lambda x: round(x, 8))
+str_vec = np.vectorize(str)
+
 def parse_coordinate(coord):
     if isinstance(coord, (tuple, list, np.ndarray)):
         coord = col_vector(coord)
-        round_vec = np.vectorize(round)
-        str_vec = np.vectorize(str)
         coord = str_vec(round_vec(coord))
         coord = list(row_vector(coord))
+
         parsed_coord_ = ",".join(coord)
         parsed_coord = f"({parsed_coord_})"
 
@@ -105,6 +107,62 @@ def parse_kwargs(kwargs, add_to_config : list=[]):
         config_str = ""
 
     return config_str
+
+def get_config_str(config_dict: dict, non_keyvals: list=[], valid_kwargs=None):
+
+    config_dict = config_dict.copy()
+
+    # by default 'config' will be non key val 
+    non_keyvals.append('config')
+
+    # replace line width values
+
+    if 'line_width' in config_dict.keys():
+        line_width = config_dict['line_width']
+        line_width_key = 'line_width'
+    elif 'line width' in config_dict.keys():
+        line_width = config_dict['line width']
+        line_width_key = 'line width'
+    else:
+        line_width = None
+
+    if line_width != None:
+        if line_width.strip() in LINE_WIDTH_DICT.keys():
+            line_width = LINE_WIDTH_DICT[line_width]
+            config_dict[line_width_key] = line_width
+
+
+    keyval_list = []
+    non_keyval_list = []
+
+    for key in config_dict.keys():
+
+        # check valid kwargs
+        if isinstance(valid_kwargs, list) and key not in valid_kwargs:
+            raise ValueError(f'{key} is not a valid key word argument.')
+
+        #  generate 'key=value' key value string list
+        if key not in non_keyvals:
+
+            # replace underscores with spaces in key names
+            if isinstance(key, str):
+                key_name = key.replace('_', ' ')
+            else:
+                key_name = str(key)
+
+            keyval_list.append(f"{key_name}={config_dict[key]}")
+
+        #  generate 'value' non key value string list
+        else:
+            non_keyval_list.append(str(config_dict[key]))
+
+    # merge the key value and non key value string lists
+    config_str_list = keyval_list + non_keyval_list
+    #  generate config string
+    config_str = ",".join(config_str_list)
+
+    return config_str
+
 
 class Node:
     def __init__(self,
