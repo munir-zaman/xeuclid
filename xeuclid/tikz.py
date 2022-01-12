@@ -30,7 +30,7 @@ LINE_WIDTH_DICT = {
 
 POINT = {
     'draw' : 'Black',
-    'fill' : 'DeepSkyBlue',
+    'fill' : 'cyan!20!black',
     'line_width' : 'thin'
 }
 
@@ -42,23 +42,23 @@ PATH = {
     'line_cap' : 'round'
 }
 
-PATH_VALID_KWARGS = ['draw', 'line_width', 'opacity', 'line_cap', 'arrows']
-PATH_NON_KEYVALS = ['arrows']
+PATH_VALID_KWARGS = ['draw', 'line_width', 'opacity', 'line_cap', 'arrows', 'style']
+PATH_NON_KEYVALS = ['arrows', 'style']
 
 ARC = {
     'line_width' : 'thick',
     'line_cap' : 'round'
 }
 
-ARC_VALID_KWARGS = ['draw', 'opacity', 'line_width', 'line_cap', 'arrows']
-ARC_NON_KEYVALS = ['arrows']
+ARC_VALID_KWARGS = ['draw', 'opacity', 'line_width', 'line_cap', 'arrows', 'style']
+ARC_NON_KEYVALS = ['arrows', 'style']
 
 CIRCLE = {
     'line_width' : 'thick'
 }
 
-CIRCLE_VALID_KWARGS = ['draw', 'fill', 'opacity', 'line_width']
-CIRCLE_NON_KEYVALS = []
+CIRCLE_VALID_KWARGS = ['draw', 'fill', 'opacity', 'line_width', 'style']
+CIRCLE_NON_KEYVALS = ['style']
 
 round_vec = np.vectorize(lambda x: round(x, 8))
 str_vec = np.vectorize(str)
@@ -318,11 +318,10 @@ class Tikz:
 
     def draw_path(self, *points, cycle=False, **kwargs):
         coords = [parse_coordinate(point) for point in points]
-        path_str = coords[0]
-        for coord in coords[1:]:
-            path_str += " -- " + coord
         if cycle:
-            path_str += " -- cycle"
+            coords.append('cycle')
+
+        path_str = " -- ".join(coords)
 
         kwargs = PATH | kwargs
         config_str = get_config_str(kwargs, non_keyvals=PATH_NON_KEYVALS, valid_kwargs=PATH_VALID_KWARGS)
@@ -373,6 +372,86 @@ class Tikz:
 
         code = f"\\draw[radius={radius},{config_str}] {pos_str} arc [{angle_str}];"
         self.write(code)
+
+    def draw_angle(self, A, B, C, 
+        radius=0.4, 
+        right_angle=True,
+        fill="cyan",
+        fill_opacity=0.5,
+        arcs=1,
+        arc_sep=0.1,
+        ticks=0,
+        tick_len=0.1,
+        tick_sep=None,
+        tick_color="black",
+        tick_width="thick",
+        label=None,
+        label_sep=0.2,
+        **kwargs):
+
+        Ax, Ay = row_vector(A)
+        Bx, By = row_vector(B)
+        Cx, Cy = row_vector(C)
+
+        start_angle = round(math.degrees(math.atan2(Ay - By, Ax - Bx)), 8)%360
+        delta_angle = round(angle(A, B, C), 8)
+        end_angle = start_angle + delta_angle
+
+        _radius = radius
+
+        if not (right_angle and isclose(delta_angle, 90)):
+
+            # fill arc
+            if isinstance(fill, str):
+                fill_code = f"\\fill[{fill}, opacity={fill_opacity}] "
+                fill_code += f"{round(Bx, 8), round(By, 8)} "
+                fill_code += f"-- ([shift=({start_angle}:{radius})]{Bx},{By}) " 
+                fill_code += f"arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
+
+                self.write(fill_code)
+
+            # arcs
+            for n in range(0, arcs):
+                self.draw_arc(polar(radius, start_angle) + B,
+                    start_angle=start_angle,
+                    delta_angle=delta_angle,
+                    radius=radius, **kwargs)
+                radius -= arc_sep
+
+            # default tick_sep
+            if not (isinstance(tick_sep, float) or isinstance(tick_sep, int)) \
+            and ((isinstance(ticks, float) or isinstance(ticks, int)) and ticks!=0):
+                tick_sep = delta_angle/ticks * 0.5
+
+            # tick marks
+            for t in range(0, ticks):
+                tick_angle = start_angle + delta_angle/2 - ((ticks - 1)*tick_sep)/2 + t*tick_sep
+                tick_start = polar(_radius - tick_len/2, tick_angle) + B
+                tick_end = polar(_radius + tick_len/2, tick_angle) + B
+                self.draw_path(tick_start, tick_end, line_width=tick_width, draw=tick_color)
+        else:
+            # right angles
+            p1 = B + polar(radius/math.sqrt(2), start_angle)
+            p2 = B + polar(radius, start_angle + 45)
+            p3 = B + polar(radius/math.sqrt(2), start_angle + 90)
+
+            # fill right angle
+            if isinstance(fill, str):
+                fill_code = f"\\fill[{fill}, opacity={fill_opacity}] {Bx, By} "
+                fill_code += f"-- ([shift=({end_angle}:{round(radius/math.sqrt(2), 8)})]{Bx}, {By}) "
+                fill_code += f"-- ([shift=({(start_angle+45)%360}:{radius})]{Bx}, {By}) "
+                fill_code += f"-- ([shift=({start_angle}:{round(radius/math.sqrt(2), 8)})]{Bx}, {By}) "
+                fill_code += f"-- cycle;"
+                self.write(fill_code)
+
+            self.draw_path(p1, p2, p3, **kwargs)
+
+        #labels
+        if isinstance(label, str):
+            label_pos = polar(label_sep + _radius, start_angle + delta_angle/2) + B
+            label_pos_x, label_pos_y = row_vector(label_pos)
+            label_code = f"\\draw {label_pos_x, label_pos_y} node[shape=circle,] {{{label}}};"
+            self.write(label_code)
 
     def add(self, obj, **kwargs):
         if isinstance(obj, Node):
