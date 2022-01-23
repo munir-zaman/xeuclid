@@ -53,6 +53,22 @@ ARC = {
 ARC_VALID_KWARGS = ['draw', 'opacity', 'line_width', 'line_cap', 'arrows', 'style']
 ARC_NON_KEYVALS = ['arrows', 'style']
 
+ANGLE = {
+    "radius"         : 0.4,
+    "right_angle"    : True,
+    "fill"           : "cyan",
+    "fill_opacity"   : 0.5,
+    "arcs"           : 1,
+    "arc_sep"        : 0.1,
+    "ticks"          : 0,
+    "tick_len"       : 0.1,
+    "tick_sep"       : None,
+    "tick_color"     : "black",
+    "tick_width"     : "thick",
+    "label"          : None,
+    "label_sep"      : 1.5
+}
+
 CIRCLE = {
     'line_width' : 'thick'
 }
@@ -373,8 +389,8 @@ class Tikz:
         code = f"\\draw[radius={radius},{config_str}] {pos_str} arc [{angle_str}];"
         self.write(code)
 
-    def draw_angle(self, A, B, C, 
-        radius=0.4, 
+    def _draw_angle(self, A, B, C,
+        radius=0.4,
         right_angle=True,
         fill="cyan",
         fill_opacity=0.5,
@@ -386,7 +402,7 @@ class Tikz:
         tick_color="black",
         tick_width="thick",
         label=None,
-        label_sep=0.2,
+        label_sep=1.25,
         **kwargs):
 
         Ax, Ay = row_vector(A)
@@ -405,7 +421,7 @@ class Tikz:
             if isinstance(fill, str):
                 fill_code = f"\\fill[{fill}, opacity={fill_opacity}] "
                 fill_code += f"{round(Bx, 8), round(By, 8)} "
-                fill_code += f"-- ([shift=({start_angle}:{radius})]{Bx},{By}) " 
+                fill_code += f"-- ([shift=({start_angle}:{radius})]{Bx},{By}) "
                 fill_code += f"arc[start angle={start_angle}, end angle={end_angle}, radius={radius}] -- cycle;"
 
                 self.write(fill_code)
@@ -448,10 +464,15 @@ class Tikz:
 
         #labels
         if isinstance(label, str):
-            label_pos = polar(label_sep + _radius, start_angle + delta_angle/2) + B
+            # label distance = label_sep * radius
+            label_pos = polar(label_sep * _radius, start_angle + delta_angle/2) + B
             label_pos_x, label_pos_y = row_vector(label_pos)
             label_code = f"\\draw {label_pos_x, label_pos_y} node[shape=circle,] {{{label}}};"
             self.write(label_code)
+
+    def draw_angle(self, A, B, C, **kwargs):
+        kwargs = ANGLE | kwargs
+        self._draw_angle(A, B, C, **kwargs)
 
     def add(self, obj, **kwargs):
         if isinstance(obj, Node):
