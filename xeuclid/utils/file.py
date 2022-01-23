@@ -16,10 +16,10 @@ class File:
 
     def write(self, lines, end="\n"):
         if isinstance(lines, str):
-            lines+= "\n"
+            lines += end
         elif isinstance(lines, (list, tuple)):
             lines = list(lines)
-            lines = [line+"\n" for line in lines]
+            lines = [line + end for line in lines]
         # add ``end`` to every line
 
         with open(self.fp, 'a') as file:

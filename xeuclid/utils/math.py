@@ -9,7 +9,7 @@ rndv=np.vectorize(rnd)
 
 # some math functions
 
-abs_tol=10**-7
+abs_tol=1e-7
 isclose=lambda a,b: math.isclose(a,b,abs_tol=abs_tol,rel_tol=0)
 
 sqrt=lambda n: math.sqrt(n)

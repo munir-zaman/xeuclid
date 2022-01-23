@@ -583,12 +583,9 @@ class Line(GObject):
             Returns ``True`` if ``self`` and ``line`` are parallel line. 
             Otherwise returns ``False``.
         """
-        v1x,v1y=self.v[0,0],self.v[1,0]
-        v2x,v2y=line.v[0,0],line.v[1,0]
-        V=np.array([[v1x,-1*v2x],
-                    [v1y,-1*v2y]])
+        # we can just check if line.v and self.v are equal
 
-        return isclose(det(V),0.0)
+        return np.allclose(line.v, self.v, rtol=0, atol=abs_tol)
 
     def __and__(self,obj):
         """Returns the intersection point of ``self`` and ``obj``
@@ -664,10 +661,7 @@ class Line(GObject):
         float, int
             The value of the angle.
         """
-        v1=self.v
-        v2=line.v
-        theta=angle_between_vectors(v1, v2)%180
-        return theta
+        return angle_between_vectors(self.v, line.v)%180
 
     def distance(self, obj):
         """Returns the perpendicular distance between ``self`` and ``obj``.
@@ -745,6 +739,7 @@ def impl_to_param_line(coeff):
 
     return Line(A, A + V)
 
+#have to change the const names
 x_vect=np.array([[1],[0]])
 y_vect=np.array([[0],[1]])
 zero_vect=np.array([[0],[0]])
