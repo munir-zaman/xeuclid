@@ -45,6 +45,15 @@ PATH = {
 PATH_VALID_KWARGS = ['draw', 'line_width', 'opacity', 'line_cap', 'arrows', 'style']
 PATH_NON_KEYVALS = ['arrows', 'style']
 
+LINE = {
+    'line_width' : 'thick',
+    'line_cap' : 'round',
+    'arrows' : '{Stealth[round]}-{Stealth[round]}'
+}
+
+LINE_VALID_KWARGS = ['draw', 'line_width', 'opacity', 'line_cap', 'arrows', 'style']
+LINE_NON_KEYVALS = ['arrows', 'style']
+
 ARC = {
     'line_width' : 'thick',
     'line_cap' : 'round'
@@ -75,6 +84,9 @@ CIRCLE = {
 
 CIRCLE_VALID_KWARGS = ['draw', 'fill', 'opacity', 'line_width', 'style']
 CIRCLE_NON_KEYVALS = ['style']
+
+X_RANGE = [-5, 5]
+Y_RANGE = [-5, 5]
 
 round_vec = np.vectorize(lambda x: round(x, 8))
 str_vec = np.vectorize(str)
@@ -344,6 +356,36 @@ class Tikz:
 
         code = f"\\draw[{config_str}] " + path_str + ";"
         self.write(code)
+
+    def draw_line(self, line,
+        x_range = X_RANGE, y_range = Y_RANGE, **kwargs):
+
+        x_min, x_max = x_range
+        y_min, y_max = y_range
+
+        bbox_verts = [
+            col_vector([x_min, y_min]),
+            col_vector([x_max, y_min]),
+            col_vector([x_max, y_max]),
+            col_vector([x_min, y_max])
+        ]
+
+        bbox = Polygon(*bbox_verts)
+        intersections = line & bbox
+
+        # if at least two intersections
+        if len(intersections) >= 2:
+            point1 = intersections[0]
+            # pick another intersection point
+            point2 = None
+            for point in intersections[1:]:
+                if not np.allclose(point, point1, rtol=0, atol=abs_tol):
+                    point2 = point
+                    break
+
+            if not point2 is None:
+                kwargs = LINE | kwargs
+                self.draw_path(point1, point2, **kwargs)
 
     def draw_circle(self, circle, **kwargs):
         center = circle.center

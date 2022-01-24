@@ -26,7 +26,7 @@ atan2=lambda x,y: math.degrees(math.atan2(y,x))
 
 
 def isnone(obj):
-    return True if obj is None else False
+    return obj is None
 
 def get_rid_of_multiple_points(l):
     L=l.copy()

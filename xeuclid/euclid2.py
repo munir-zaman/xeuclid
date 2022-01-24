@@ -4,6 +4,8 @@ import math
 
 to_tuple = lambda vector: tuple(row_vector(vector))
 
+ORIGIN = np.array([[0], [0]])
+
 class GObject(object):
     """Base class for all geometric objects """
     def __init__(self):
@@ -207,7 +209,7 @@ def intersection_line_line(line1,line2):
 
 def intersection_line_segment(line,segment):
     int_=intersection_line_line(line, segment.line)
-    if not isnone(int_):
+    if not (int_ is None):
         out=int_ if (int_ in segment) else None
     else:
         out=None
@@ -215,7 +217,7 @@ def intersection_line_segment(line,segment):
 
 def intersection_line_ray(line,ray):
     int_=intersection_line_line(line, ray.line)
-    if not isnone(int_):
+    if not (int_ is None):
         out=int_ if (int_ in ray) else None
     else:
         out=None
@@ -223,7 +225,7 @@ def intersection_line_ray(line,ray):
 
 def intersection_segment_ray(segment, ray):
     int_=intersection_line_line(segment.line, ray.line)
-    if not isnone(int_):
+    if not (int_ is None):
         out=int_ if (int_ in ray) and (int_ in segment) else None
     else:
         out=None
@@ -231,7 +233,7 @@ def intersection_segment_ray(segment, ray):
 
 def intersection_ray_ray(ray1, ray2):
     int_=intersection_line_line(ray1.line, ray2.line)
-    if not isnone(int_):
+    if not (int_ is None):
         out=int_ if (int_ in ray1) and (int_ in ray2) else None
     else:
         out=None
@@ -240,7 +242,7 @@ def intersection_ray_ray(ray1, ray2):
 
 def intersection_segment_segment(segment1,segment2):
     int_=intersection_line_line(segment1.line, segment2.line)
-    if not isnone(int_):
+    if not (int_ is None):
         out=int_ if (int_ in segment1) and (int_ in segment2) else None
     else:
         out=None
@@ -291,8 +293,8 @@ class Line(GObject):
         self._B = col_vector(B)
         self._update_attrs()
 
-        if isclose(self.v[0,0], 0) and isclose(self.v[1,0], 0):
-            raise ValueError("`self.A` and `self.B` cannot be equal")
+        if np.allclose(self.v, ORIGIN):
+            raise ValueError("`A` and `B` cannot be equal")
 
     def _update_attrs(self):
         self._v = self.B - self.A
@@ -406,7 +408,7 @@ class Line(GObject):
                 t = P[i]/V[i]
                 break
 
-        out = t if np.allclose(P, V*t, rtol=0) else None
+        out = t if np.allclose(P, V*t, rtol=0, atol=abs_tol) else None
         return out
 
     def fx(self, x):
@@ -1186,6 +1188,9 @@ class Polygon(GObject):
         max_py = max(vertices, key=lambda p: p[1,0])
         min_py = min(vertices, key=lambda p: p[1,0])
 
+        x_axis = Line(ORIGIN, col_vector([1, 0]))
+        y_axis = Line(ORIGIN, col_vector([0, 1]))
+
         down_line = y_axis.perpendicular_line(min_py)
         up_line = y_axis.perpendicular_line(max_py)
         left_line = x_axis.perpendicular_line(min_px)
@@ -1301,7 +1306,7 @@ def intersection_circle_circle(circle1, circle2):
         theta= acos((r1**2 + d**2 - r2**2)/(2*r1*d))
 
         c1c2=circle1.center - circle2.center
-        x_angle=angle_between_vectors(x_vect, c1c2)
+        x_angle=angle_between_vectors(col_vector([1, 0]), c1c2)
 
         R1=Ray(circle1.center, circle2.center).rotate(circle1.center, theta)
         R2=Ray(circle1.center, circle2.center).rotate(circle1.center, -theta)
