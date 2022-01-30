@@ -196,7 +196,7 @@ def get_config_str(config_dict: dict, non_keyvals: list=[], valid_kwargs=None):
         else:
             non_keyval_list.append(str(config_dict[key]))
 
-    # merge the key value and non key value string lists
+    # merge the key value and non key value string lists#0f111b
     config_str_list = keyval_list + non_keyval_list
     #  generate config string
     config_str = ",".join(config_str_list)
@@ -204,60 +204,105 @@ def get_config_str(config_dict: dict, non_keyvals: list=[], valid_kwargs=None):
     return config_str
 
 
-class Node:
-    def __init__(self,
-                 name,
-                 coordinate,
-                 text=" ",
-                 draw=None,
-                 fill=None,
-                 color=None,
-                 **kwargs):
+ANCHOR_ALIASES = {
+    'n' : "north",
+    's' : "south",
+    'e' : "east",
+    'w' : "west",
+    'nw': "north west",
+    'ne': "north east",
+    'sw': "south west",
+    'se': "south east"
+}
 
+
+class Node:
+    def __init__(self, name, pos, text=" ", **kwargs):
         self.name = name
-        self.coordinate = coordinate
+        self.pos  = pos
         self.text = text
-        self.draw = draw
-        self.fill = fill
-        self.color = color
-        self.kwargs = kwargs
-        # set attributes from kwargs
-        for key in self.kwargs.keys():
+
+        #aliases for anchor
+        if 'anchor' in kwargs.keys():
+            if kwargs['anchor'] in ANCHOR_ALIASES.keys():
+                kwargs['anchor'] = ANCHOR_ALIASES[kwargs['anchor']]
+
+        #set attributes from kwargs
+        for key in kwargs.keys():
             setattr(self, key, kwargs[key])
 
-        # aliases for specifying anchors
-        if hasattr(self, 'anchor'):
-            anchor_dict = { 'nw':"north west",
-                            'ne':"north east",
-                            "se":"south east",
-                            "sw": "south west",
-                            "n" : "north",
-                            "s" : "south" }
-            if self.anchor in anchor_dict.keys():
-                self.anchor = anchor_dict[self.anchor]
-
     def get_code(self):
-        # parse config string from class attributes 
         attrs = self.__dict__.copy()
-        for attr in ['name', 'coordinate', 'text', 'fill', 'draw', 'color', 'kwargs']:
+        IGNORE_ATTRS = ['name', 'pos', 'text']
+        
+        for  attr in IGNORE_ATTRS:
             attrs.pop(attr)
-        config_str = parse_kwargs(attrs)
 
-        if self.draw!=None:
-            config_str = f"draw={self.draw}," + config_str
-        if self.fill!=None:
-            config_str = f"fill={self.fill}," + config_str
-        if self.color!=None:
-            config_str = f"{self.color}," + config_str
-
-        if config_str.strip()!="":
-            config=f"[{config_str}]"
+        config_str = get_config_str(attrs)
+        if config_str.strip() != "":
+            config = f"[{config_str}]"
         else:
-            config=""
-
-        code = f"\\node ({self.name}) at {self.coordinate} {config} {{{self.text}}};"
-        self.code = code
+            config = f""
+        
+        parsed_coord = parse_coordinate(self.pos)
+        code = f"\\node ({self.name}) at {parsed_coord} {config} {{{self.text}}};"
         return code
+
+#class Node:
+#    def __init__(self,
+#                 name,
+#                 coordinate,
+#                 text=" ",
+#                 draw=None,
+#                 fill=None,
+#                 color=None,
+#                 **kwargs):
+#
+#        self.name = name
+#        self.coordinate = coordinate
+#        self.text = text
+#        self.draw = draw
+#        self.fill = fill
+#        self.color = color
+#        self.kwargs = kwargs
+#        # set attributes from kwargs
+#        for key in self.kwargs.keys():
+#            setattr(self, key, kwargs[key])
+#
+#        # aliases for specifying anchors
+#        if hasattr(self, 'anchor'):
+#            anchor_dict = { 'nw':"north west",
+#                            'ne':"north east",
+#                            "se":"south east",
+#                            "sw": "south west",
+#                            "n" : "north",
+#                            "s" : "south" }
+#            if self.anchor in anchor_dict.keys():
+#                self.anchor = anchor_dict[self.anchor]
+#
+#    def get_code(self):
+#        # parse config string from class attributes 
+#        attrs = self.__dict__.copy()
+#        for attr in ['name', 'coordinate', 'text', 'fill', 'draw', 'color', 'kwargs']:
+#            attrs.pop(attr)
+#        config_str = parse_kwargs(attrs)
+#
+#        if self.draw!=None:
+#            config_str = f"draw={self.draw}," + config_str
+#        if self.fill!=None:
+#            config_str = f"fill={self.fill}," + config_str
+#        if self.color!=None:
+#            config_str = f"{self.color}," + config_str
+#
+#        if config_str.strip()!="":
+#            config=f"[{config_str}]"
+#        else:
+#            config=""
+#
+#        code = f"\\node ({self.name}) at {self.coordinate} {config} {{{self.text}}};"
+#        self.code = code
+#        return code
+#
 
 
 class Tikz:
